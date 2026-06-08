@@ -1,8 +1,10 @@
 {
+	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "stellar",
 	"compatibility_date": "2025-01-01",
 	"compatibility_flags": ["nodejs_compat"],
-	"assets": {
-		"directory": "./dist"
-	}
+	"build": {
+		"command": "pnpm build"
+	},
+	"pages_build_output_dir": "dist"
 }
