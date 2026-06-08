@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/* Tailwind v4：使用 .dark 类控制暗色模式变体 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Swup 页面过渡默认主题 */
+:root {
+	--swup-theme-color: #6366f1;
+	--swup-progressbar-color: #6366f1;
+	--swup-progressbar-height: 3px;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+/* Swup 过渡期间默认隐藏 */
+html.is-changing {
+	overflow: hidden;
+}
+
+html.is-animating .transition-fade {
+	opacity: 0;
+}
+
+.transition-fade {
+	transition: opacity 0.3s ease;
+}
+
+/* 主题切换时为顶层元素添加过渡，避免突兀闪烁 */
+html.theme-ready,
+html.theme-ready body,
+html.theme-ready header,
+html.theme-ready footer,
+html.theme-ready section {
+	transition:
+		background-color 0.2s ease,
+		color 0.2s ease,
+		border-color 0.2s ease;
+}

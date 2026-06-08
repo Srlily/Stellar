@@ -1,0 +1,149 @@
+---
+import { backgroundConfig } from "@/config/backgroundConfig";
+
+const { mode, src, overlay, fullscreen } = backgroundConfig;
+
+// 处理图片数组，获取随机图片
+function getRandomImage(images: string | string[]): string {
+	if (Array.isArray(images)) {
+		return images[Math.floor(Math.random() * images.length)];
+	}
+	return images;
+}
+
+// 获取图片 URL
+function getImageUrl(config: any): string {
+	if (!config) return "";
+	if (typeof config === "string") return config;
+	if (Array.isArray(config)) return getRandomImage(config);
+	// 如果是对象格式 { light, dark }
+	if (config.light) {
+		return typeof config.light === "string" ? config.light : getRandomImage(config.light);
+	}
+	if (config.dark) {
+		return typeof config.dark === "string" ? config.dark : getRandomImage(config.dark);
+	}
+	return "";
+}
+
+// 预计算桌面和移动端图片（只在构建时随机一次）
+const desktopImage = getImageUrl(src.desktop);
+const mobileImage = getImageUrl(src.mobile);
+
+// CSS 变量值
+const overlayOpacity = overlay.opacity ?? 0.8;
+const overlayBlur = overlay.blur ?? 10;
+const cardOpacity = overlay.cardOpacity ?? 0.5;
+const fullscreenPosition = fullscreen.position ?? "center";
+---
+
+{/* 全屏壁纸模式 */}
+{mode === "fullscreen" && (
+	<div
+		id="background-wallpaper"
+		class="background-wallpaper"
+		style={`--bg-position: ${fullscreenPosition};`}
+	>
+		<img
+			src={desktopImage}
+			alt=""
+			class="background-img desktop-only"
+			loading="eager"
+		/>
+		<img
+			src={mobileImage}
+			alt=""
+			class="background-img mobile-only"
+			loading="eager"
+		/>
+	</div>
+)}
+
+{/* 全屏透明覆盖模式 */}
+{mode === "overlay" && (
+	<div
+		id="background-wallpaper"
+		class="background-wallpaper"
+	>
+		<div
+			class="background-overlay desktop-only"
+			style={`background-image: url('${desktopImage}');`}
+		></div>
+		<div
+			class="background-overlay mobile-only"
+			style={`background-image: url('${mobileImage}');`}
+		></div>
+		<div class="background-mask"></div>
+	</div>
+)}
+
+<script is:inline define:vars={{ mode }}>
+	// 设置背景模式标记
+	document.documentElement.dataset.background = mode;
+</script>
+
+<style>
+	/* 背景壁纸基础样式 */
+	.background-wallpaper {
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		pointer-events: none;
+	}
+
+	/* 全屏壁纸模式 */
+	.background-img {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: var(--bg-position, center);
+	}
+
+	.desktop-only {
+		display: block;
+	}
+
+	.mobile-only {
+		display: none;
+	}
+
+	@media (max-width: 768px) {
+		.desktop-only {
+			display: none;
+		}
+
+		.mobile-only {
+			display: block;
+		}
+	}
+
+	/* 全屏透明覆盖模式 */
+	.background-overlay {
+		position: absolute;
+		inset: 0;
+		background-size: cover;
+		background-position: center;
+		background-attachment: fixed;
+	}
+
+	.background-mask {
+		position: absolute;
+		inset: 0;
+		background-color: rgba(255, 255, 255, 0.5);
+		backdrop-filter: blur(var(--overlay-blur, 10px));
+	}
+
+	html.dark .background-mask {
+		background-color: rgba(0, 0, 0, 0.7);
+	}
+
+	/* 全屏透明模式：body 背景透明 */
+	html[data-background="overlay"] {
+		background-color: transparent;
+	}
+
+	html[data-background="overlay"] body {
+		background-color: transparent;
+	}
+</style>

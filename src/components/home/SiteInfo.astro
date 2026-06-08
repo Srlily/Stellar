@@ -1,0 +1,210 @@
+---
+import { siteConfig } from "@/config/siteConfig";
+import { homeConfig } from "@/config/homeConfig";
+import Icon from "@/components/Icon.astro";
+
+interface Props {
+	class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+
+const headerInfo = homeConfig.headerInfo;
+const hitokotoUrl = homeConfig.hitokotoUrl || "";
+const customInfo = homeConfig.customInfo || [];
+const typewriter = homeConfig.typewriter || { enable: false };
+---
+
+{headerInfo && (
+	<div
+		class:list={[
+			"flex flex-wrap items-center justify-center gap-2 text-sm text-slate-600 dark:text-slate-400 md:gap-3",
+			className,
+		]}
+		id="site-info"
+	>
+		{headerInfo === "subtitle" && siteConfig.subtitle && (
+			<span>{siteConfig.subtitle}</span>
+		)}
+
+		{headerInfo === "description" && siteConfig.description && (
+			<span>{siteConfig.description}</span>
+		)}
+
+		{headerInfo === "hitokoto" && (
+			<span id="typewriter-container" class="flex items-center gap-1.5">
+				<span id="typewriter-text"></span>
+				{typewriter.enable && <span id="typewriter-cursor" class="animate-pulse">|</span>}
+			</span>
+		)}
+
+		{headerInfo === "custom" && customInfo.length > 0 && (
+			<>
+				{typewriter.enable ? (
+					<span id="typewriter-container" class="flex items-center gap-1.5">
+						<span id="typewriter-text"></span>
+						<span id="typewriter-cursor" class="animate-pulse">|</span>
+					</span>
+				) : (
+					customInfo.map((item, index) => {
+						const text = typeof item === "string" ? item : item.text;
+						const icon = typeof item === "string" ? undefined : item.icon;
+						return (
+							<>
+								{index > 0 && <span class="text-slate-300 dark:text-slate-600">|</span>}
+								<span class="flex items-center gap-1.5">
+									{icon && <Icon name={icon} size="1rem" />}
+									<span>{text}</span>
+								</span>
+							</>
+						);
+					})
+				)}
+			</>
+		)}
+	</div>
+)}
+
+{(headerInfo === "hitokoto" || headerInfo === "custom") && typewriter.enable && (
+	<script is:inline define:vars={{ headerInfo, hitokotoUrl, customInfo, typewriter }}>
+		(function() {
+			const speed = typewriter.speed || 100;
+			const deleteSpeed = typewriter.deleteSpeed || 50;
+			const pauseTime = typewriter.pauseTime || 2000;
+
+			let texts = [];
+			let textIndex = 0;
+			let charIndex = 0;
+			let isDeleting = false;
+
+			async function fetchHitokotoText() {
+				try {
+					const response = await fetch(hitokotoUrl);
+					const contentType = response.headers.get("content-type") || "";
+
+					let text = "";
+					let creator = "";
+					let from = "";
+
+					if (contentType.includes("javascript") || hitokotoUrl.includes(".js")) {
+						text = await response.text();
+						const writeMatch = text.match(/document\.write\s*\(\s*["']([^"']+)["']\s*\)/);
+						if (writeMatch) {
+							text = writeMatch[1];
+						}
+					} else {
+						const data = await response.json();
+						text = data.hitokoto || data.text || data.content || data.quote || data.sentence || "";
+						creator = data.creator || "";
+						from = data.from || data.from_who || "";
+					}
+
+					// 构建带出处的文本
+					let fullText = text || "";
+					if (from) {
+						fullText += " —— 《" + from + "》";
+					}
+
+					return fullText.trim() || "获取失败";
+				} catch (error) {
+					console.error("Failed to fetch hitokoto:", error);
+					return "获取失败";
+				}
+			}
+
+			function type() {
+				if (texts.length === 0) return;
+
+				const currentText = texts[textIndex];
+				const textElement = document.getElementById("typewriter-text");
+				if (!textElement) return;
+
+				if (isDeleting) {
+					textElement.textContent = currentText.substring(0, charIndex - 1);
+					charIndex--;
+				} else {
+					textElement.textContent = currentText.substring(0, charIndex + 1);
+					charIndex++;
+				}
+
+				let typeSpeed = isDeleting ? deleteSpeed : speed;
+
+				if (!isDeleting && charIndex === currentText.length) {
+					// hitokoto 只显示一次，不循环
+					if (headerInfo === "hitokoto") {
+						return;
+					}
+					typeSpeed = pauseTime;
+					isDeleting = true;
+				} else if (isDeleting && charIndex === 0) {
+					isDeleting = false;
+					textIndex = (textIndex + 1) % texts.length;
+					typeSpeed = 500;
+				}
+
+				setTimeout(type, typeSpeed);
+			}
+
+			async function init() {
+				const textElement = document.getElementById("typewriter-text");
+				if (!textElement) return;
+
+				// 初始化文本
+				if (headerInfo === "hitokoto") {
+					const text = await fetchHitokotoText();
+					texts.push(text);
+				} else {
+					texts = customInfo.map(item => typeof item === "string" ? item : item.text);
+				}
+
+				// 从头开始打字
+				textElement.textContent = "";
+				charIndex = 0;
+
+				// 开始打字机效果
+				setTimeout(type, 100);
+			}
+
+			if (document.readyState === "loading") {
+				document.addEventListener("DOMContentLoaded", init);
+			} else {
+				init();
+			}
+		})();
+	</script>
+)}
+
+{headerInfo === "hitokoto" && !typewriter.enable && (
+	<script is:inline define:vars={{ hitokotoUrl }}>
+		async function fetchHitokoto() {
+			try {
+				const response = await fetch(hitokotoUrl);
+				const contentType = response.headers.get("content-type") || "";
+
+				let text = "";
+
+				if (contentType.includes("javascript") || hitokotoUrl.includes(".js")) {
+					text = await response.text();
+					const writeMatch = text.match(/document\.write\s*\(\s*["']([^"']+)["']\s*\)/);
+					if (writeMatch) {
+						text = writeMatch[1];
+					}
+				} else {
+					const data = await response.json();
+					text = data.hitokoto || data.text || data.content || data.quote || data.sentence || "";
+				}
+
+				const textElement = document.getElementById("typewriter-text");
+				if (textElement) {
+					textElement.textContent = text || "获取失败";
+				}
+			} catch (error) {
+				const textElement = document.getElementById("typewriter-text");
+				if (textElement) {
+					textElement.textContent = "获取失败";
+				}
+			}
+		}
+		fetchHitokoto();
+	</script>
+)}

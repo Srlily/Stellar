@@ -7,12 +7,38 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node scripts/generate-icons.js && astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
-    "astro": "^6.4.4"
+    "@astrojs/check": "^0.9.9",
+    "@fancyapps/ui": "6.1.14",
+    "@fontsource-variable/jetbrains-mono": "5.2.6",
+    "@iconify-json/fa7-brands": "1.2.2",
+    "@iconify-json/fa7-regular": "1.2.3",
+    "@iconify-json/fa7-solid": "1.2.4",
+    "@iconify-json/material-symbols": "1.2.74",
+    "@iconify-json/mdi": "1.2.3",
+    "@iconify-json/mingcute": "1.2.7",
+    "@iconify-json/simple-icons": "1.2.84",
+    "@iconify/utils": "3.1.1",
+    "@swup/astro": "^1.8.0",
+    "@tailwindcss/typography": "0.5.16",
+    "@tailwindcss/vite": "^4.3.0",
+    "astro": "^6.4.4",
+    "astro-icon": "1.1.5",
+    "mermaid": "^11.15.0",
+    "satori": "0.26.0",
+    "sharp": "0.34.5",
+    "swup": "^4.9.0",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3"
   },
-  "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a"
+  "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a",
+  "devDependencies": {
+    "@iconify-json/svg-spinners": "1.2.4",
+    "wrangler": "^4.98.0"
+  }
 }

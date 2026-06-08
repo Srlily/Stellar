@@ -1,0 +1,18 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Avatar from "@/components/home/Avatar.astro";
+import NavCards from "@/components/home/NavCards.astro";
+import SkillCards from "@/components/home/SkillCards.astro";
+import Footer from "@/components/Footer.astro";
+---
+
+<Layout title="首页 · Stellar">
+	<section class="mx-auto flex max-w-5xl flex-col gap-12 px-6 py-16">
+		<Header />
+		<Avatar />
+		<NavCards />
+		<SkillCards />
+	</section>
+	<Footer slot="footer" />
+</Layout>

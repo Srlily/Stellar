@@ -1,0 +1,103 @@
+---
+/**
+ * 图标组件
+ * 使用内联 SVG 渲染图标，支持 currentColor
+ */
+import { getIconSvg, hasIcon } from "@/constants/icons";
+
+interface Props {
+	/**
+	 * 图标名称，格式为 "prefix:name"，如 "material-symbols:search"
+	 */
+	name: string;
+	/**
+	 * 图标尺寸
+	 * @default "1em"
+	 */
+	size?: string;
+	/**
+	 * 图标颜色
+	 * @default "currentColor"
+	 */
+	color?: string;
+	/**
+	 * 图标类名
+	 */
+	class?: string;
+	/**
+	 * 是否显示加载状态
+	 */
+	loading?: boolean;
+	/**
+	 * 额外的 SVG 属性
+	 */
+	[key: string]: any;
+}
+
+const {
+	name,
+	size = "1em",
+	color = "currentColor",
+	class: className = "",
+	loading = false,
+	...rest
+} = Astro.props;
+
+const svg = getIconSvg(name);
+const isAvailable = hasIcon(name);
+---
+
+{isAvailable ? (
+	<span
+		class:list={["inline-flex items-center justify-center shrink-0", className]}
+		style={`color: ${color}; width: ${size}; height: ${size};`}
+		data-icon-container
+		{...rest}
+	>
+		{loading && (
+			<span
+				class="absolute animate-spin"
+				data-loading-indicator
+				aria-hidden="true"
+			>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width={size}
+					height={size}
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+				>
+					<circle cx="12" cy="12" r="10" stroke-opacity="0.25" />
+					<path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round" />
+				</svg>
+			</span>
+		)}
+		<span
+			class:list={["transition-opacity", loading ? "opacity-0" : "opacity-100"]}
+			data-icon-element
+			set:html={svg}
+		/>
+	</span>
+) : (
+	<span
+		class:list={["inline-flex items-center justify-center shrink-0 text-red-500", className]}
+		style={`width: ${size}; height: ${size};`}
+		title={`Icon not found: ${name}`}
+	>
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width={size}
+			height={size}
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+		>
+			<circle cx="12" cy="12" r="10" />
+			<line x1="12" y1="8" x2="12" y2="12" />
+			<line x1="12" y1="16" x2="12.01" y2="16" />
+		</svg>
+	</span>
+)}

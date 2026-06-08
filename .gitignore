@@ -1,24 +1,64 @@
-# build output
+# =========================
+# Astro 构建输出
+# =========================
+# `astro build` 生成的静态站点文件
 dist/
 
-# generated types
+# =========================
+# Astro 自动生成的类型与缓存
+# =========================
+# 包含 `astro sync` 生成的类型定义、缓存等
 .astro/
 
-# dependencies
+# =========================
+# 依赖
+# =========================
+# 安装的 npm / pnpm 依赖包
 node_modules/
 
-# logs
+# =========================
+# 日志
+# =========================
+# 各类包管理器运行过程中产生的调试日志
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+pnpm-error.log*
 
-# environment variables
+# =========================
+# 环境变量
+# =========================
+# 包含密钥、API Token 等敏感信息，禁止提交
 .env
 .env.production
+.env.development
+.env.test
+.env.local
+.env.*.local
 
-# macOS-specific files
+# =========================
+# 操作系统相关文件
+# =========================
+# macOS 自动生成的目录元数据文件
 .DS_Store
+# Windows 缩略图缓存
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
-# jetbrains setting folder
+# =========================
+# 编辑器 / IDE 配置
+# =========================
+# JetBrains 系列（IntelliJ IDEA、WebStorm、PyCharm 等）
 .idea/
+# Visual Studio Code 用户级配置（建议保留部分共享配置，仅忽略用户设置）
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+
+# =========================
+# TypeScript
+# =========================
+# TypeScript 增量编译缓存
+*.tsbuildinfo

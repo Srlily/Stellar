@@ -1,0 +1,76 @@
+---
+import { siteConfig } from "@/config/siteConfig";
+import { homeConfig } from "@/config/homeConfig";
+import { getThemeImagePair } from "@/utils";
+import SiteInfo from "./SiteInfo.astro";
+
+interface Props {
+	class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+
+const avatar = getThemeImagePair(homeConfig.avatar);
+---
+
+<section
+	class:list={[
+		"flex flex-col items-center gap-4 text-center md:justify-center md:gap-5",
+		className,
+	]}
+>
+	<div class="avatar-wrapper relative shrink-0" id="avatar-container">
+		{avatar.light && (
+			<img
+				src={avatar.light.src}
+				alt={siteConfig.title}
+				id="avatar-light"
+				class="h-20 w-20 rounded-2xl object-cover shadow-md transition-transform duration-300 hover:scale-105 md:h-24 md:w-24"
+				loading="lazy"
+				decoding="async"
+			/>
+		)}
+	{avatar.dark && (
+		<img
+			src={avatar.dark.src}
+			alt={siteConfig.title}
+			id="avatar-dark"
+			class="h-20 w-20 rounded-2xl object-cover shadow-md transition-transform duration-300 hover:scale-105 md:h-24 md:w-24"
+			style="display: none;"
+			loading="lazy"
+			decoding="async"
+		/>
+	)}
+</div>
+<h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 md:text-3xl">
+	{siteConfig.title}
+</h1>
+<SiteInfo />
+</section>
+
+<script is:inline>
+	function updateAvatarTheme() {
+		var lightImg = document.getElementById("avatar-light");
+		var darkImg = document.getElementById("avatar-dark");
+		if (!lightImg || !darkImg) return;
+		var isDark = document.documentElement.classList.contains("dark");
+		lightImg.style.display = isDark ? "none" : "block";
+		darkImg.style.display = isDark ? "block" : "none";
+	}
+
+	function initAvatar() {
+		updateAvatarTheme();
+		document.addEventListener("theme-change", function() {
+			updateAvatarTheme();
+		});
+		document.addEventListener("swup:content", function() {
+			updateAvatarTheme();
+		});
+	}
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", initAvatar);
+	} else {
+		initAvatar();
+	}
+</script>

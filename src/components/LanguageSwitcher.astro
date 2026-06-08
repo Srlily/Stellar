@@ -1,0 +1,92 @@
+---
+import { siteConfig } from "@/config/siteConfig";
+import Icon from "./Icon.astro";
+
+const currentLang = siteConfig.lang || "zh_CN";
+const languages = [
+	{ code: "zh_CN", label: "中文", flag: "🇨🇳" },
+	{ code: "en_US", label: "EN", flag: "🇺🇸" },
+];
+
+const currentLangData = languages.find((l) => l.code.toLowerCase() === currentLang.toLowerCase()) || languages[0];
+---
+
+<div class="relative inline-block group">
+	<button
+		type="button"
+		id="lang-switcher"
+		class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 text-xs text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+		aria-label="切换语言"
+	>
+		<Icon name="material-symbols:language" size="1rem" />
+		<span class="hidden sm:inline">{currentLangData.label}</span>
+	</button>
+
+	<!-- 下拉菜单 -->
+	<div
+		id="lang-dropdown"
+		class="absolute right-0 top-full mt-1 hidden min-w-[120px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800"
+	>
+		{languages.map((lang) => (
+			<button
+				type="button"
+				data-lang={lang.code}
+				class:list={[
+					"lang-option flex w-full items-center gap-2 px-3 py-2 text-xs transition-colors hover:bg-slate-100 dark:hover:bg-slate-700",
+					lang.code.toLowerCase() === currentLang.toLowerCase()
+						? "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20"
+						: "text-slate-600 dark:text-slate-300",
+				]}
+			>
+				<span class="text-sm">{lang.flag}</span>
+				<span>{lang.label}</span>
+			</button>
+		))}
+	</div>
+</div>
+
+<script>
+	function initLanguageSwitcher() {
+		const button = document.getElementById("lang-switcher");
+		const dropdown = document.getElementById("lang-dropdown");
+		const options = document.querySelectorAll(".lang-option");
+
+		if (!button || !dropdown) return;
+
+		// 切换下拉菜单显示
+		button.addEventListener("click", (e) => {
+			e.stopPropagation();
+			dropdown.classList.toggle("hidden");
+		});
+
+		// 点击其他区域关闭
+		document.addEventListener("click", () => {
+			dropdown.classList.add("hidden");
+		});
+
+		// 语言切换
+		options.forEach((option) => {
+			option.addEventListener("click", () => {
+				const lang = option.getAttribute("data-lang");
+				if (lang) {
+					// 触发语言切换事件
+					window.dispatchEvent(
+						new CustomEvent("language-change", { detail: { lang } }),
+					);
+					// 关闭下拉菜单
+					dropdown.classList.add("hidden");
+					// 更新显示
+					window.location.reload();
+				}
+			});
+		});
+	}
+
+	// 初始化
+	initLanguageSwitcher();
+
+	// Swup 页面过渡后重新初始化
+	document.addEventListener("swup:content", () => {
+		initLanguageSwitcher();
+	});
+</script>

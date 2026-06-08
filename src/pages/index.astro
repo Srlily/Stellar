@@ -1,11 +1,12 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import { siteConfig } from "@/config/siteConfig";
+import VerticalHome from "@/layouts/home/VerticalHome.astro";
+import HorizontalHome from "@/layouts/home/HorizontalHome.astro";
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// 主页布局由 siteConfig.homeLayout 控制
+// 可选值："vertical" | "horizontal"
+const HomeLayout =
+	siteConfig.homeLayout === "horizontal" ? HorizontalHome : VerticalHome;
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<HomeLayout />

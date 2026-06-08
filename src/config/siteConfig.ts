@@ -1,0 +1,87 @@
+import type { SiteConfig } from "@/types/config";
+// import { fontConfig } from "./fontConfig";
+
+// 定义站点语言
+// 语言代码，例如：'zh_CN', 'en_US', 。
+const SITE_LANG = "zh_CN";
+
+export const siteConfig: SiteConfig = {
+	// 站点标题
+	title: "Stellar",
+
+	// 站点副标题
+	subtitle: "一个简洁高效的 Astro 站点",
+
+	// 站点 URL
+	site_url: "",
+
+	// 站点描述
+	description:"Stellar 星际",
+
+	// 站点关键词
+	keywords: [
+		"Astro",
+		"Stellar",
+	],
+
+	// 主页布局模式
+	// 选项："vertical" | "horizontal"
+	// 由 src/pages/index.astro 读取并切换到对应的页面文件
+	homeLayout: "vertical",
+
+	// 主题模式
+	// 选项："light" | "dark" | "system"
+	theme: "system",
+
+	// 统计分析
+	analytics: {
+		// Google Analytics ID
+		googleAnalyticsId: "",
+		// Microsoft Clarity ID
+		microsoftClarityId: "",
+		// Umami 统计配置
+		umamiAnalytics: {
+			// Umami Website ID
+			websiteId: "2cb2c382-952b-4f37-8295-0987a8684603",
+			// Umami JS地址，支持使用自建
+			scriptUrl: "https://umami-server.com/js/umami.js",
+			// Umami 会话回放脚本地址，支持使用自建
+			replaysScriptUrl: "https://umami-server.com/recorder.js",
+			// 是否追踪出站链接
+			trackOutboundLinks: true,
+			// 是否收集浏览器性能指标
+			collectWebVitals: true,
+			// 会话回放配置
+			replays: {
+				// 是否启用会话回放
+				enabled: false,
+				// 录制会话采样率，范围 0-1，例如 0.15 表示记录 15% 的会话
+				sampleRate: 0.15,
+				// 隐私遮罩级别："moderate" 会遮罩所有输入框；"strict" 额外遮罩页面全部文本
+				maskLevel: "moderate",
+				// 单次录制最大时长（毫秒）
+				maxDuration: 300000,
+				// 需要排除录制的元素 CSS 选择器，例如 ".sensitive-widget"
+				blockSelector: "",
+			},
+		},
+		// 51la 统计配置
+		la51Analytics: {
+			// 51la 统计 ID
+			Id: "",
+			// 自定义 SDK JS 地址，防止 DNS 污染，留空使用默认地址
+			sdkUrl: "",
+			// 多个统计 ID 的数据分离标识，留空则使用 Id
+			ck: "",
+			// 是否开启事件分析功能
+			autoTrack: false,
+			//  Hash路由模式, 项目使用History API路由, 所以不必开启默认false
+			hashMode: false,
+			// 是否开启网站录屏功能
+			screenRecord: true,
+		},
+	},
+
+	// 站点语言，在本配置文件顶部SITE_LANG定义
+	lang: SITE_LANG,
+};

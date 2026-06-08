@@ -1,0 +1,97 @@
+---
+/**
+ * 主题切换组件
+ * 支持 light / dark / system 三种模式循环切换
+ */
+import Icon from "./Icon.astro";
+---
+
+<button
+	type="button"
+	id="theme-toggle"
+	class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+	aria-label="切换主题"
+>
+	<!-- 太阳图标 (light mode) -->
+	<span id="theme-icon-light" class="hidden">
+		<Icon name="material-symbols:wb-sunny-outline-rounded" size="1.125rem" />
+	</span>
+
+	<!-- 月亮图标 (dark mode) -->
+	<span id="theme-icon-dark" class="hidden">
+		<Icon name="material-symbols:dark-mode-outline-rounded" size="1.125rem" />
+	</span>
+
+	<!-- 自动图标 (system mode) -->
+	<span id="theme-icon-system" class="hidden">
+		<Icon name="material-symbols:brightness-auto-outline-rounded" size="1.125rem" />
+	</span>
+</button>
+
+<script>
+	import { LIGHT_MODE, DARK_MODE, SYSTEM_MODE } from "../constants";
+
+	type ThemeMode = typeof LIGHT_MODE | typeof DARK_MODE | typeof SYSTEM_MODE;
+
+	function updateThemeIcon(mode: ThemeMode) {
+		const lightIcon = document.getElementById("theme-icon-light");
+		const darkIcon = document.getElementById("theme-icon-dark");
+		const systemIcon = document.getElementById("theme-icon-system");
+
+		if (!lightIcon || !darkIcon || !systemIcon) return;
+
+		lightIcon.classList.add("hidden");
+		darkIcon.classList.add("hidden");
+		systemIcon.classList.add("hidden");
+
+		switch (mode) {
+			case LIGHT_MODE:
+				lightIcon.classList.remove("hidden");
+				break;
+			case DARK_MODE:
+				darkIcon.classList.remove("hidden");
+				break;
+			case SYSTEM_MODE:
+				systemIcon.classList.remove("hidden");
+				break;
+		}
+	}
+
+	function initThemeToggle() {
+		const toggle = document.getElementById("theme-toggle");
+		if (!toggle) return;
+
+		// 初始化图标
+		if (window.__theme) {
+			updateThemeIcon(window.__theme.getMode());
+		}
+
+		// 绑定点击事件
+		toggle.addEventListener("click", () => {
+			if (window.__theme) {
+				const newMode = window.__theme.cycleMode();
+				updateThemeIcon(newMode);
+				// 触发自定义事件，让其他组件响应主题变化
+				document.dispatchEvent(new CustomEvent("theme-change", { detail: { mode: newMode } }));
+			}
+		});
+
+		// 监听系统主题变化，更新图标
+		if (window.matchMedia) {
+			const mq = window.matchMedia("(prefers-color-scheme: dark)");
+			mq.addEventListener("change", () => {
+				if (window.__theme && window.__theme.getMode() === SYSTEM_MODE) {
+					updateThemeIcon(SYSTEM_MODE);
+				}
+			});
+		}
+	}
+
+	// 页面加载时初始化
+	initThemeToggle();
+
+	// Swup 页面过渡后重新初始化
+	document.addEventListener("swup:content", () => {
+		initThemeToggle();
+	});
+</script>

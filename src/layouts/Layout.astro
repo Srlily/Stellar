@@ -1,23 +1,135 @@
+---
+import '../styles/global.css';
+import { LIGHT_MODE, DARK_MODE, SYSTEM_MODE } from '../constants';
+import { siteConfig } from '@/config/siteConfig';
+import Background from '@/components/Background.astro';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title = 'Stellar — Astro + Tailwind + Swup + Mermaid',
+	description = '集成 Tailwind CSS、Swup 页面过渡与 Mermaid 图表的 Astro 站点',
+} = Astro.props;
+
+// 从 siteConfig 获取默认主题模式，确保类型为字符串
+const defaultTheme: string = (siteConfig.theme as string) || SYSTEM_MODE;
+---
+
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="description" content={description} />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<title>{title}</title>
+		<script is:inline define:vars={{ LIGHT_MODE, DARK_MODE, SYSTEM_MODE, defaultTheme }}>
+			// 主题模式：light / dark / system
+			// 存储键名与 siteConfig.theme 字段名保持一致
+			(function () {
+				const STORAGE_KEY = 'theme';
+
+				function getStoredMode() {
+					try {
+						return localStorage.getItem(STORAGE_KEY) || defaultTheme;
+					} catch (_) {
+						return defaultTheme;
+					}
+				}
+
+				function resolveTheme(mode) {
+					if (mode === DARK_MODE) return DARK_MODE;
+					if (mode === LIGHT_MODE) return LIGHT_MODE;
+					if (
+						window.matchMedia &&
+						window.matchMedia('(prefers-color-scheme: dark)').matches
+					) {
+						return DARK_MODE;
+					}
+					return LIGHT_MODE;
+				}
+
+				function applyThemeClass(theme) {
+					const root = document.documentElement;
+					if (theme === DARK_MODE) {
+						root.classList.add('dark');
+					} else {
+						root.classList.remove('dark');
+					}
+					root.dataset.theme = theme;
+				}
+
+				function applyMode(mode) {
+					const theme = resolveTheme(mode);
+					applyThemeClass(theme);
+				}
+
+				// 首次加载：立即应用，避免主题闪烁
+				applyMode(getStoredMode());
+				// 通知其他组件初始主题
+				document.dispatchEvent(new CustomEvent("theme-change", { detail: { mode: getStoredMode() } }));
+
+				// 监听系统主题变化（仅在 system 模式下生效）
+				if (window.matchMedia) {
+					const mq = window.matchMedia('(prefers-color-scheme: dark)');
+					const onSystemChange = () => {
+						if (getStoredMode() === SYSTEM_MODE) {
+							applyThemeClass(
+								mq.matches ? DARK_MODE : LIGHT_MODE,
+							);
+						}
+					};
+					if (mq.addEventListener) {
+						mq.addEventListener('change', onSystemChange);
+					} else if (mq.addListener) {
+						mq.addListener(onSystemChange);
+					}
+				}
+
+				// 暴露给 DarkModeToggle 使用
+				window.__theme = {
+					getMode: getStoredMode,
+					setMode: function (mode) {
+						try {
+							localStorage.setItem(STORAGE_KEY, mode);
+						} catch (_) {}
+						applyMode(mode);
+						document.dispatchEvent(new CustomEvent("theme-change", { detail: { mode: mode } }));
+					},
+					cycleMode: function () {
+						const current = getStoredMode();
+						const next =
+							current === LIGHT_MODE
+								? DARK_MODE
+								: current === DARK_MODE
+									? SYSTEM_MODE
+									: LIGHT_MODE;
+						try {
+							localStorage.setItem(STORAGE_KEY, next);
+						} catch (_) {}
+						applyMode(next);
+						document.dispatchEvent(new CustomEvent("theme-change", { detail: { mode: next } }));
+						return next;
+					},
+				};
+
+				// 启用过渡
+				requestAnimationFrame(function () {
+					document.documentElement.classList.add('theme-ready');
+				});
+			})();
+		</script>
 	</head>
-	<body>
-		<slot />
+	<body class="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
+		<Background />
+		<main id="swup" class="flex-1 transition-fade">
+			<slot />
+		</main>
+		<slot name="footer" />
 	</body>
 </html>
-
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
