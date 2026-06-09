@@ -1,8 +1,110 @@
 ---
-// 技能卡片区块
-// 当前用于垂直布局（NavCards 下方）
+/**
+ * 技能卡片组件
+ * 展示技能熟练度
+ */
+import { homeConfig } from "@/config/homeConfig";
+import Icon from "@/components/Icon.astro";
+
+interface Props {
+	class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+
+// 获取技能卡片配置
+const skillCards = homeConfig.skillCards;
+const isEnabled = skillCards?.enable !== false;
+const skills = skillCards?.items || [];
+const columns = skillCards?.columns || 4; // 每行显示的技能数量
+const iconSize = skillCards?.iconSize || 24; // 图标大小（单位px）
+
+// 渐变配置
+const gradientColors = skillCards?.gradient?.colors;
+const gradientDir = skillCards?.gradient?.direction || "right";
+const hasGradient = Array.isArray(gradientColors) && gradientColors.length >= 2;
+
+// 转换方向
+const directionMap: Record<string, string> = {
+	left: "to left",
+	right: "to right",
+	center: "to right, var(--tw-gradient-stops)",
+};
+const cssDirection = directionMap[gradientDir] || "to right";
+
+// 过滤掉未配置名称的技能
+const validSkills = skills.filter((skill) => skill.name && skill.name.trim() !== "");
+
+// 根据列数计算响应式宽度
+function getColumnWidth(cols: number): { xl: string; lg: string; md: string } {
+	// xl: 最多列数
+	// lg: 列数减1，最多3列
+	// md: 列数减2，最多2列
+	const xlCols = cols;
+	const lgCols = Math.min(cols - 1, 3) || 1;
+	const mdCols = Math.min(cols - 2, 2) || 1;
+	
+	return {
+		xl: `${(100 / xlCols) - 1}%`,
+		lg: `${(100 / lgCols) - 1}%`,
+		md: `${(100 / mdCols) - 1}%`,
+	};
+}
+
+const colWidth = getColumnWidth(columns);
+
+// 进度条样式
+const progressStyle = hasGradient
+	? `background: linear-gradient(${cssDirection}, ${gradientColors.join(", ")});`
+	: "background-color: #22c55e;";
+
+// 生成响应式样式
+const responsiveStyle = `
+	@media (min-width: 768px) {
+		.skill-item { width: calc(${colWidth.md}); }
+	}
+	@media (min-width: 1024px) {
+		.skill-item { width: calc(${colWidth.lg}); }
+	}
+	@media (min-width: 1280px) {
+		.skill-item { width: calc(${colWidth.xl}); }
+	}
+`;
 ---
 
-<section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-	<!-- TODO: 技能卡片列表 -->
-</section>
+{isEnabled && validSkills.length > 0 && (
+	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80", className]}>
+		<style is:inline set:html={responsiveStyle}></style>
+		{/* 头部 */}
+		<div class="mb-6 flex items-center gap-2">
+			<Icon name="material-symbols:build-outline-rounded" size={`${iconSize}px`} class="text-primary-500" />
+			<h2 class="text-sm font-medium text-slate-700 dark:text-slate-300">
+				技能点
+			</h2>
+		</div>
+
+		{/* 技能列表 */}
+		<ul class="relative flex flex-wrap justify-between gap-y-3">
+			{validSkills.map((skill) => (
+				<li
+					class="skill-item flex w-full flex-col gap-1.5"
+				>
+					<div class="flex justify-between">
+						<label class="text-xs font-medium text-slate-700 dark:text-slate-300">
+							{skill.name}
+						</label>
+						<span class="text-xs font-medium text-slate-500 dark:text-slate-400">
+							{skill.level || 0}%
+						</span>
+					</div>
+					<div class="relative h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-600">
+						<div
+							class="absolute h-full rounded-full"
+							style={`${progressStyle} width: ${skill.level || 0}%;`}
+						></div>
+					</div>
+				</li>
+			))}
+		</ul>
+	</section>
+)}

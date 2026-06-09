@@ -108,6 +108,50 @@ export interface NavCardsConfig {
 	columns?: number; // 每行显示的卡片数量，默认4
 	showMoreButton?: boolean; // 是否显示更多按钮（默认false）
 	maxRows?: number; // 最多显示的行数（showMoreButton为false时生效），0表示不限制
+	autoFavicon?: boolean; // 是否自动解析网站的 favicon 图标（默认true）
+	faviconSize?: number; // 自动解析的 favicon 图标大小（默认48，单位px）
+	iconSize?: number; // icon 图标大小（默认24，单位px）
+}
+
+// ==================== 技能卡片类型 ====================
+
+// 技能卡片项
+export interface SkillItem {
+	name: string; // 技能名称
+	level?: number; // 熟练度 1-100（可选）
+}
+
+// 技能卡片配置
+export interface SkillCardsConfig {
+	enable?: boolean; // 是否启用技能卡片
+	columns?: number; // 每行显示的技能数量（默认4）
+	iconSize?: number; // 图标大小（默认24，单位px）
+	items?: SkillItem[]; // 技能列表
+	gradient?: {
+		colors: string[]; // 渐变色数组，至少2个颜色，支持多个中间色
+		direction?: "left" | "right" | "center"; // 渐变方向，默认 "right"
+	};
+}
+
+// ==================== 项目卡片类型 ====================
+
+// 项目卡片项
+export interface ProjectItem {
+	name: string; // 项目名称
+	url: string; // 项目链接
+	description?: string; // 项目描述
+	image?: string; // 项目图片（可选）
+	icon?: string; // 项目图标（可选）
+	tags?: string[]; // 项目标签（可选）
+}
+
+// 项目卡片配置
+export interface ProjectCardsConfig {
+	enable?: boolean; // 是否启用项目卡片
+	columns?: number; // 每行显示的项目数量（默认3）
+	showMoreButton?: boolean; // 是否显示更多按钮（默认false）
+	maxRows?: number; // 最多显示的行数（showMoreButton为false时生效），0表示不限制
+	items?: ProjectItem[]; // 项目列表
 }
 
 // 主页配置
@@ -124,6 +168,8 @@ export interface HomeConfig {
 	typewriter?: TypewriterConfig;
 	socialLinks?: SocialLinksConfig; // 社交链接配置
 	navCards?: NavCardsConfig; // 导航卡片配置
+	skillCards?: SkillCardsConfig; // 技能卡片配置
+	projectCards?: ProjectCardsConfig; // 项目卡片配置
 }
 
 // ==================== 站点配置类型 ====================

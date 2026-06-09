@@ -85,6 +85,12 @@ export const homeConfig: HomeConfig = {
 		showMoreButton: false,
 		// 最多显示的行数（showMoreButton 为 false 时生效，0 表示不限制）
 		maxRows: 2,
+		// 是否自动解析网站的 favicon 图标（默认true，优先级低于 image 和 icon）
+		autoFavicon: false,
+		// 自动解析的 favicon 图标大小（默认48，单位px）
+		faviconSize: 32,
+		// icon 图标大小（默认24，单位px）
+		iconSize: 32,
 		// 导航卡片列表
 		items: [
 			// 可配置的字段：
@@ -93,15 +99,126 @@ export const homeConfig: HomeConfig = {
 			// description: 卡片描述（可选）
 			// icon: 图标名称（可选），使用 iconify 格式，如 "material-symbols:home"
 			// image: 图片 URL（可选），优先级高于 icon
-			{ title: "Stellar 仓库", url: "https://github.com/Srlily/Stellar", description: "开源个人主页项目", icon: "mdi:github" },
-			{ title: "Srlily", url: "https://github.com/Srlily", description: "GitHub", icon: "mdi:github" },
-			{ title: "nulijiazaizhong", url: "https://github.com/nulijiazaizhong", description: "GitHub", icon: "mdi:github" },
+			{ title: "Stellar 仓库", url: "https://github.com/Srlily/Stellar", description: "开源个人主页项目", icon: "fa7-brands:github" },
+			{ title: "Srlily", url: "https://github.com/Srlily", description: "GitHub", icon: "fa7-brands:github" },
+			{ title: "nulijiazaizhong", url: "https://github.com/nulijiazaizhong", description: "GitHub", icon: "fa7-brands:github" },
 			{ title: "技术博客", url: "https://blog.example.com", description: "分享技术文章与教程", icon: "material-symbols:article-outline-rounded" },
 			{ title: "在线工具", url: "https://tool.example.com", description: "常用开发工具集合", icon: "material-symbols:build-outline-rounded" },
 			{ title: "图床服务", url: "https://img.example.com", description: "图片托管与分享", icon: "material-symbols:image-outline-rounded" },
 			{ title: "API 文档", url: "https://api.example.com", description: "接口文档与示例", icon: "material-symbols:code-rounded" },
 			{ title: "演示站点", url: "https://demo.example.com", description: "在线演示与预览", icon: "material-symbols:play-circle-outline-rounded" },
 			{ title: "问题反馈", url: "https://github.com/Srlily/Stellar/issues", description: "提交 Bug 或建议", icon: "material-symbols:feedback-outline-rounded" },
+		],
+	},
+
+	// 技能卡片配置
+	skillCards: {
+		// 是否启用技能卡片
+		enable: true,
+		// 每行显示的技能数量（默认4）
+		columns: 2,
+		// 图标大小（默认24，单位px）
+		iconSize: 24,
+		// 进度条渐变色配置（可选）
+		gradient: {
+			colors: ["#4ade80", "#22c55e", "#16a34a"], // 绿色渐变
+			direction: "right", // 渐变方向：left(从右到左)、right(从左到右)、center(从中间向两边)
+		},
+		// 技能列表
+		items: [
+			// 可配置的字段：
+			// name: 技能名称（必填）
+			// level: 熟练度 1-100（可选）
+			{ name: "TypeScript", level: 85 },
+			{ name: "JavaScript", level: 90 },
+			{ name: "React", level: 75 },
+			{ name: "Vue.js", level: 80 },
+			{ name: "Node.js", level: 70 },
+			{ name: "Python", level: 65 },
+			{ name: "Git", level: 85 },
+			{ name: "CSS/SCSS", level: 80 },
+		],
+	},
+
+	// 项目卡片配置
+	projectCards: {
+		// 是否启用项目卡片
+		enable: true,
+		// 每行显示的项目数量（默认3）
+		columns: 4,
+		// 是否显示更多按钮（默认false，"更多"按钮占据一格）
+		showMoreButton: false,
+		// 最多显示的行数（showMoreButton 为 false 时生效，0 表示不限制）
+		maxRows: 2,
+		// 项目列表
+		items: [
+			// 可配置的字段：
+			// name: 项目名称（必填）
+			// url: 项目链接（必填）
+			// description: 项目描述（可选）
+			// image: 项目图片（可选）
+			// icon: 项目图标（可选）
+			// tags: 项目标签（可选）
+			{
+				name: "Stellar",
+				url: "https://github.com/Srlily/Stellar",
+				description: "开源个人主页项目，基于 Astro 构建",
+				tags: ["Astro", "TypeScript", "Tailwind CSS"],
+			},
+			{
+				name: "博客系统",
+				url: "https://blog.example.com",
+				description: "使用 Next.js 构建的博客系统",
+				tags: ["Next.js", "React", "MDX"],
+			},
+			{
+				name: "后台管理系统",
+				url: "https://admin.example.com",
+				description: "Vue3 + Element Plus 后台管理系统",
+				tags: ["Vue3", "TypeScript", "Element Plus"],
+			},
+			{
+				name: "Stellar",
+				url: "https://github.com/Srlily/Stellar",
+				description: "开源个人主页项目，基于 Astro 构建",
+				tags: ["Astro", "TypeScript", "Tailwind CSS"],
+			},
+			{
+				name: "博客系统",
+				url: "https://blog.example.com",
+				description: "使用 Next.js 构建的博客系统",
+				tags: ["Next.js", "React", "MDX"],
+			},
+			{
+				name: "后台管理系统",
+				url: "https://admin.example.com",
+				description: "Vue3 + Element Plus 后台管理系统",
+				tags: ["Vue3", "TypeScript", "Element Plus"],
+			},
+			{
+				name: "后台管理系统",
+				url: "https://admin.example.com",
+				description: "Vue3 + Element Plus 后台管理系统",
+				tags: ["Vue3", "TypeScript", "Element Plus"],
+			},
+			{
+				name: "后台管理系统",
+				url: "https://admin.example.com",
+				description: "Vue3 + Element Plus 后台管理系统",
+				tags: ["Vue3", "TypeScript", "Element Plus"],
+			},
+			{
+				name: "后台管理系统",
+				url: "https://admin.example.com",
+				description: "Vue3 + Element Plus 后台管理系统",
+				tags: ["Vue3", "TypeScript", "Element Plus"],
+			},
+			{
+				name: "后台管理系统",
+				url: "https://admin.example.com",
+				description: "Vue3 + Element Plus 后台管理系统",
+				tags: ["Vue3", "TypeScript", "Element Plus"],
+			},
 		],
 	},
 };
