@@ -1,0 +1,120 @@
+---
+/**
+ * 社交链接组件
+ * 展示各种社交平台的链接
+ */
+import { homeConfig } from "@/config/homeConfig";
+import Icon from "@/components/Icon.astro";
+
+// 社交平台配置
+const platformConfig: Record<
+	string,
+	{ icon: string; label: string }
+> = {
+	email: {
+		icon: "material-symbols:mail-outline-rounded",
+		label: "邮箱",
+	},
+	github: {
+		icon: "fa7-brands:github",
+		label: "GitHub",
+	},
+	bilibili: {
+		icon: "fa7-brands:bilibili",
+		label: "哔哩哔哩",
+	},
+	steam: {
+		icon: "fa7-brands:steam",
+		label: "Steam",
+	},
+	twitter: {
+		icon: "fa7-brands:x-twitter",
+		label: "X (Twitter)",
+	},
+	discord: {
+		icon: "fa7-brands:discord",
+		label: "Discord",
+	},
+	telegram: {
+		icon: "fa7-brands:telegram",
+		label: "Telegram",
+	},
+	youtube: {
+		icon: "fa7-brands:youtube",
+		label: "YouTube",
+	},
+	zhihu: {
+		icon: "simple-icons:zhihu",
+		label: "知乎",
+	},
+	weibo: {
+		icon: "simple-icons:sinaweibo",
+		label: "微博",
+	},
+	netease_cloud_music: {
+		icon: "simple-icons:neteasecloudmusic",
+		label: "网易云音乐",
+	},
+	juejin: {
+		icon: "simple-icons:juejin",
+		label: "掘金",
+	},
+	jianshu: {
+		icon: "mdi:pencil-outline",
+		label: "简书",
+	},
+	custom: {
+		icon: "material-symbols:link",
+		label: "链接",
+	},
+};
+
+interface Props {
+	class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+
+// 获取社交链接配置
+const socialLinks = homeConfig.socialLinks;
+const isEnabled = socialLinks?.enable !== false;
+const links = socialLinks?.items || [];
+
+// 过滤掉未配置或 URL 为空的链接
+const validLinks = links.filter((link) => link.url && link.url.trim() !== "");
+---
+
+{isEnabled && validLinks.length > 0 && (
+	<section
+		class:list={[
+			"flex flex-wrap items-center justify-center gap-3",
+			className,
+		]}
+	>
+		{validLinks.map((link) => {
+			const config = platformConfig[link.platform] || platformConfig.custom;
+			const label = link.label || config.label;
+			const icon = link.icon || config.icon;
+
+			return (
+				<a
+					href={link.url}
+					target="_blank"
+					rel="noopener noreferrer"
+					class:list={[
+						"group inline-flex h-11 w-11 items-center justify-center rounded-full",
+						"border border-slate-200 bg-white/80 backdrop-blur-sm",
+						"text-slate-600 transition-all duration-200",
+						"hover:border-primary-400 hover:bg-primary-50 hover:text-primary-600",
+						"dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300",
+						"dark:hover:border-primary-400 dark:hover:bg-primary-900/20 dark:hover:text-primary-400",
+					]}
+					title={label}
+					aria-label={label}
+				>
+					<Icon name={icon} size="2rem" />
+				</a>
+			);
+		})}
+	</section>
+)}

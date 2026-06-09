@@ -56,6 +56,40 @@ export type TypewriterConfig = {
 // 标题下方信息类型
 export type HeaderInfoType = "subtitle" | "description" | "hitokoto" | "custom" | null | "";
 
+// ==================== 社交链接类型 ====================
+
+// 社交平台类型
+export type SocialPlatform =
+	| "email"
+	| "github"
+	| "bilibili"
+	| "steam"
+	| "twitter"
+	| "discord"
+	| "telegram"
+	| "youtube"
+	| "zhihu"
+	| "weibo"
+	| "netease_cloud_music"
+	| "zhihu"
+	| "juejin"
+	| "jianshu"
+	| "custom";
+
+// 社交链接项
+export interface SocialLinkItem {
+	platform: SocialPlatform; // 社交平台
+	url: string; // 链接地址
+	label?: string; // 自定义标签（仅 custom 平台需要）
+	icon?: string; // 自定义图标名称（仅 custom 平台需要）
+}
+
+// 社交链接配置
+export interface SocialLinksConfig {
+	enable?: boolean; // 是否启用社交链接
+	items?: SocialLinkItem[]; // 社交链接列表
+}
+
 // 主页配置
 export interface HomeConfig {
 	avatar?: {
@@ -68,6 +102,7 @@ export interface HomeConfig {
 	hitokotoUrl?: string;
 	customInfo?: CustomInfoItem[];
 	typewriter?: TypewriterConfig;
+	socialLinks?: SocialLinksConfig; // 社交链接配置
 }
 
 // ==================== 站点配置类型 ====================

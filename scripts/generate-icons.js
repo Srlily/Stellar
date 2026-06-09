@@ -79,10 +79,12 @@ function extractIconNames(content) {
 		new RegExp(`name=["']((?:${iconPrefixes}):[a-z0-9-]+)["']`, "gi"),
 		// name={`xxx:yyy`}
 		new RegExp(`name=\\{[\\'\\"]((?:${iconPrefixes}):[a-z0-9-]+)[\\'\\"]\\}`, "gi"),
-		// icon="xxx:yyy" 或 icon='xxx:yyy'
+		// icon="xxx:yyy" 或 icon='xxx:yyy' (HTML 属性格式)
 		new RegExp(`icon=["']((?:${iconPrefixes}):[a-z0-9-]+)["']`, "gi"),
-		// icon={`xxx:yyy`}
+		// icon={`xxx:yyy`} (模板字符串格式)
 		new RegExp(`icon=\\{[\\'\\"]((?:${iconPrefixes}):[a-z0-9-]+)[\\'\\"]\\}`, "gi"),
+		// icon: "xxx:yyy" 或 icon: 'xxx:yyy' (TypeScript 对象字面量格式)
+		new RegExp(`icon:\\s*["']((?:${iconPrefixes}):[a-z0-9-]+)["']`, "gi"),
 		// getIconSvg("xxx:yyy") 或 getIconSvg('xxx:yyy')
 		new RegExp(`getIconSvg\\(["']((?:${iconPrefixes}):[a-z0-9-]+)["']\\)`, "gi"),
 		// hasIcon("xxx:yyy")
@@ -152,8 +154,8 @@ async function getIconSvg(iconName) {
 
 	// 转换为 SVG
 	const renderData = iconToSVG(iconData, {
-		height: "1em",
-		width: "1em",
+		height: null,
+		width: null,
 	});
 
 	let svg = iconToHTML(replaceIDs(renderData.body), renderData.attributes);
@@ -162,6 +164,12 @@ async function getIconSvg(iconName) {
 	if (!svg.includes("currentColor")) {
 		svg = svg.replace("<svg", '<svg fill="currentColor"');
 	}
+
+	// 移除固定尺寸属性，使用 style 来控制大小
+	svg = svg.replace(/\s+width="[^"]*"/g, "");
+	svg = svg.replace(/\s+height="[^"]*"/g, "");
+	// 添加 style 让 SVG 填满父容器
+	svg = svg.replace("<svg", '<svg style="width: 100%; height: 100%;"');
 
 	return svg;
 }

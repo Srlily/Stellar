@@ -38,4 +38,40 @@ export const homeConfig: HomeConfig = {
 		// 完全显示后的暂停时间（毫秒）
 		pauseTime: 2000,
 	},
+
+	// 社交链接配置
+	socialLinks: {
+		// 是否启用社交链接（false 可关闭显示）
+		enable: true,
+		// 社交链接列表
+		items: [
+			{
+				platform: "email",
+				url: "mailto:example@example.com",
+			},
+			{
+				platform: "github",
+				url: "https://github.com/yourusername",
+			},
+			{
+				platform: "bilibili",
+				url: "https://space.bilibili.com/youruid",
+			},
+			{
+				platform: "steam",
+				url: "https://steamcommunity.com/id/yourid",
+			},
+			// 可用的平台类型：
+			// email, github, bilibili, steam, twitter, discord,
+			// telegram, youtube, zhihu, weibo, netease_cloud_music,
+			// juejin, jianshu, custom
+			// custom 平台需要额外配置 label 和 icon:
+			// {
+			//   platform: "custom",
+			//   url: "https://example.com",
+			//   label: "自定义链接",
+			//   icon: "material-symbols:link"
+			// }
+		],
+	},
 };
