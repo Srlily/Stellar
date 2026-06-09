@@ -90,6 +90,26 @@ export interface SocialLinksConfig {
 	items?: SocialLinkItem[]; // 社交链接列表
 }
 
+// ==================== 导航卡片类型 ====================
+
+// 导航卡片项
+export interface NavCardItem {
+	title: string; // 卡片标题
+	url: string; // 链接地址
+	description?: string; // 卡片描述
+	icon?: string; // 图标名称（可选）
+	image?: string; // 图片 URL（可选，优先级高于图标）
+}
+
+// 导航卡片配置
+export interface NavCardsConfig {
+	enable?: boolean; // 是否启用导航卡片
+	items?: NavCardItem[]; // 导航卡片列表
+	columns?: number; // 每行显示的卡片数量，默认4
+	showMoreButton?: boolean; // 是否显示更多按钮（默认false）
+	maxRows?: number; // 最多显示的行数（showMoreButton为false时生效），0表示不限制
+}
+
 // 主页配置
 export interface HomeConfig {
 	avatar?: {
@@ -103,6 +123,7 @@ export interface HomeConfig {
 	customInfo?: CustomInfoItem[];
 	typewriter?: TypewriterConfig;
 	socialLinks?: SocialLinksConfig; // 社交链接配置
+	navCards?: NavCardsConfig; // 导航卡片配置
 }
 
 // ==================== 站点配置类型 ====================

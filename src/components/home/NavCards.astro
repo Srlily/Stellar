@@ -1,9 +1,369 @@
 ---
-// 跳转 / 导航卡片区块
-// 垂直布局：放在中部（Avatar 下方）
-// 水平布局：放在右侧（Avatar 旁边）
+/**
+ * 导航卡片组件
+ * 展示站点快捷入口卡片
+ * 
+ * 图标优先级：
+ * 1. image - 用户提供的图片 URL
+ * 2. favicon - 自动解析网站的 favicon（通过获取网页 HTML 解析 link rel="icon"）
+ * 3. icon - 配置的图标名称
+ * 
+ * 布局：每行显示指定数量的卡片，超出部分点击"更多"按钮显示弹窗
+ */
+import { homeConfig } from "@/config/homeConfig";
+import Icon from "@/components/Icon.astro";
+
+interface Props {
+	class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+
+// 获取导航卡片配置
+const navCards = homeConfig.navCards;
+const isEnabled = navCards?.enable !== false;
+const cards = navCards?.items || [];
+const columns = navCards?.columns || 4; // 默认每行4个
+const showMoreButton = navCards?.showMoreButton !== false; // 默认显示更多按钮
+const maxRows = navCards?.maxRows || 0; // 0 表示不限制行数
+
+// 过滤掉未配置或 URL 为空的卡片
+const validCards = cards.filter((card) => card.url && card.url.trim() !== "");
+
+// 检查是否有有效的图片 URL（非空字符串）
+function hasValidImage(card: any): boolean {
+	return card.image && card.image.trim() !== "";
+}
+
+// 从 HTML 中解析 favicon URL
+async function fetchFaviconFromPage(pageUrl: string): Promise<string | null> {
+	try {
+		// 只处理外部链接
+		if (pageUrl.startsWith("/")) return null;
+		
+		const response = await fetch(pageUrl, {
+			headers: {
+				'User-Agent': 'Mozilla/5.0 (compatible; Bot/0.1)'
+			},
+			signal: AbortSignal.timeout(5000)
+		});
+		
+		if (!response.ok) return null;
+		
+		const html = await response.text();
+		
+		// 解析 link 标签中的 icon
+		const iconMatches = html.match(/<link[^>]*rel=["'](?:shortcut )?icon["'][^>]*href=["']([^"']+)["']/gi);
+		const appleTouchMatches = html.match(/<link[^>]*rel=["']apple-touch-icon["'][^>]*href=["']([^"']+)["']/gi);
+		
+		// 获取基础 URL 用于处理相对路径
+		const baseUrl = new URL(pageUrl);
+		
+		// 优先使用 apple-touch-icon，其次是 icon
+		const matches = [...(appleTouchMatches || []), ...(iconMatches || [])];
+		
+		for (const match of matches) {
+			const hrefMatch = match.match(/href=["']([^"']+)["']/);
+			if (hrefMatch) {
+				let faviconUrl = hrefMatch[1];
+				
+				if (faviconUrl.startsWith("//")) {
+					faviconUrl = baseUrl.protocol + faviconUrl;
+				} else if (faviconUrl.startsWith("/")) {
+					faviconUrl = baseUrl.origin + faviconUrl;
+				} else if (!faviconUrl.startsWith("http")) {
+					faviconUrl = baseUrl.origin + "/" + faviconUrl;
+				}
+				
+				return faviconUrl;
+			}
+		}
+		
+		return `${baseUrl.origin}/favicon.ico`;
+		
+	} catch (error) {
+		console.error(`Failed to fetch favicon for ${pageUrl}:`, error);
+		return null;
+	}
+}
+
+// 获取图标的 URL（使用 SSR 获取真实 favicon）
+async function getCardWithFavicon(card: any) {
+	if (card.url.startsWith("/")) {
+		return { ...card, faviconUrl: null };
+	}
+	
+	const faviconUrl = await fetchFaviconFromPage(card.url);
+	return { ...card, faviconUrl };
+}
+
+// 使用 Promise.all 并行获取所有外部链接的 favicon
+const cardsWithFavicons = await Promise.all(validCards.map(getCardWithFavicon));
+
+// 计算最大可用卡槽位数量
+// showMoreButton 为 true 时，第一行预留一个位置给"更多"按钮，总共 columns 个卡槽
+// showMoreButton 为 false 且 maxRows > 0 时，总共 maxRows * columns 个卡槽
+// showMoreButton 为 false 且 maxRows 为 0 时，不限制
+const maxTotalSlots = showMoreButton
+	? columns
+	: (maxRows > 0 ? columns * maxRows : cardsWithFavicons.length);
+
+// 如果卡片数超出卡槽，最后一个卡槽留给"更多"按钮
+const hasOverflow = cardsWithFavicons.length > maxTotalSlots;
+const maxVisibleCards = hasOverflow ? maxTotalSlots - 1 : maxTotalSlots;
+
+// 分离显示的卡片和更多的卡片
+const visibleCards = cardsWithFavicons.slice(0, maxVisibleCards);
+const modalCards = cardsWithFavicons.slice(maxVisibleCards);
+const hasMore = modalCards.length > 0;
 ---
 
-<section class="grid gap-4 sm:grid-cols-2">
-	<!-- TODO: 跳转卡片列表 -->
-</section>
+{isEnabled && validCards.length > 0 && (
+	<>
+		<style>
+			.nav-cards-grid {
+				grid-template-columns: repeat(2, 1fr);
+			}
+			@media (min-width: 1024px) {
+				.nav-cards-grid {
+					grid-template-columns: repeat(var(--nav-cols, 4), 1fr);
+				}
+			}
+		</style>
+		<section class:list={["grid gap-4", className]}>
+			{/* 主区域卡片 */}
+			<div class="nav-cards-grid grid gap-4" style={`--nav-cols: ${columns};`}>
+				{visibleCards.map((card) => (
+					<div class="card-item">
+						<a
+							href={card.url}
+							target={card.url.startsWith("/") ? "_self" : "_blank"}
+							rel={card.url.startsWith("/") ? "" : "noopener noreferrer"}
+							class="group/card relative flex items-center gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm transition-all duration-300 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400"
+						>
+							{/* 图标/图片区域 */}
+							<div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-700">
+								{hasValidImage(card) ? (
+									<img
+										src={card.image}
+										alt={card.title}
+										class="h-full w-full object-cover"
+										loading="lazy"
+										decoding="async"
+									/>
+								) : card.url.startsWith("/") ? (
+									card.icon ? (
+										<Icon name={card.icon} size="1.5rem" />
+									) : (
+										<Icon name="material-symbols:link" size="1.5rem" />
+								)
+							) : (
+								<>
+									{card.faviconUrl && (
+										<img
+											src={card.faviconUrl}
+											alt={card.title}
+											class="h-full w-full object-contain"
+											loading="lazy"
+											decoding="async"
+											onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+											style="display: flex;"
+										/>
+									)}
+									<span class:list={["h-full w-full items-center justify-center", card.faviconUrl ? "hidden" : "flex"]} style={card.faviconUrl ? "display: none;" : ""}>
+										{card.icon ? (
+											<Icon name={card.icon} size="1.5rem" />
+										) : (
+											<Icon name="material-symbols:link" size="1.5rem" />
+										)}
+									</span>
+								</>
+							)}
+							</div>
+
+							{/* 文字内容 */}
+							<div class="flex flex-col gap-1 min-w-0 flex-1">
+								<h3 class="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+									{card.title}
+								</h3>
+								{card.description && (
+									<p class="truncate text-xs text-slate-500 dark:text-slate-400">
+										{card.description}
+									</p>
+								)}
+							</div>
+
+							{/* 箭头图标 */}
+							<div class="shrink-0 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100">
+								<Icon
+									name="material-symbols:arrow-forward-rounded"
+									size="1rem"
+								/>
+							</div>
+						</a>
+					</div>
+				))}
+
+				{/* 更多按钮 */}
+				{hasMore && (
+					<div class="card-item">
+						<button
+							type="button"
+							class="group/card relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm transition-all duration-300 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400 cursor-pointer"
+							id="nav-cards-more-btn"
+							aria-label={`查看更多 ${modalCards.length} 个链接`}
+						>
+							<div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-700">
+								<Icon name="material-symbols:add-rounded" size="1.5rem" />
+							</div>
+							<div class="flex flex-col gap-1 min-w-0 flex-1 text-left">
+								<h3 class="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+									查看更多
+								</h3>
+								<p class="truncate text-xs text-slate-500 dark:text-slate-400">
+									还有 {modalCards.length} 个链接
+								</p>
+							</div>
+						</button>
+					</div>
+				)}
+			</div>
+		</section>
+
+		{/* 更多卡片弹窗 */}
+		{hasMore && (
+			<div
+				id="nav-cards-modal"
+				class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+				aria-hidden="true"
+			>
+				<div class="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+					{/* 弹窗头部 */}
+					<div class="mb-4 flex items-center justify-between">
+						<h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
+							更多链接
+						</h2>
+						<button
+							type="button"
+							id="nav-cards-modal-close"
+							class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+							aria-label="关闭"
+						>
+							<Icon name="material-symbols:close-rounded" size="1.25rem" />
+						</button>
+					</div>
+
+					{/* 更多卡片网格 */}
+					<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+						{modalCards.map((card) => (
+							<a
+								href={card.url}
+								target={card.url.startsWith("/") ? "_self" : "_blank"}
+								rel={card.url.startsWith("/") ? "" : "noopener noreferrer"}
+								class="group/card relative flex items-center gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3 transition-all duration-200 hover:border-primary-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400"
+							>
+								<div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
+									{hasValidImage(card) ? (
+										<img
+											src={card.image}
+											alt={card.title}
+											class="h-full w-full object-cover"
+											loading="lazy"
+											decoding="async"
+										/>
+									) : card.url.startsWith("/") ? (
+										card.icon ? (
+											<Icon name={card.icon} size="1.25rem" />
+										) : (
+											<Icon name="material-symbols:link" size="1.25rem" />
+										)
+									) : (
+										<>
+											{card.faviconUrl && (
+												<img
+													src={card.faviconUrl}
+													alt={card.title}
+													class="h-full w-full object-contain"
+													loading="lazy"
+													decoding="async"
+													onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+													style="display: flex;"
+												/>
+											)}
+											<span class:list={["h-full w-full items-center justify-center", card.faviconUrl ? "hidden" : "flex"]} style={card.faviconUrl ? "display: none;" : ""}>
+												{card.icon ? (
+													<Icon name={card.icon} size="1.25rem" />
+												) : (
+													<Icon name="material-symbols:link" size="1.25rem" />
+												)}
+											</span>
+										</>
+									)}
+								</div>
+								<div class="flex min-w-0 flex-1 flex-col gap-0.5">
+									<span class="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+										{card.title}
+									</span>
+									{card.description && (
+										<span class="truncate text-xs text-slate-500 dark:text-slate-400">
+											{card.description}
+										</span>
+									)}
+								</div>
+								<div class="shrink-0 opacity-0 transition-opacity duration-200 group-hover/card:opacity-100">
+									<Icon name="material-symbols:arrow-forward-rounded" size="0.875rem" />
+								</div>
+							</a>
+						))}
+					</div>
+				</div>
+			</div>
+		)}
+
+		{/* 弹窗控制脚本 */}
+		{hasMore && (
+			<script is:inline>
+				(function() {
+					const moreBtn = document.getElementById('nav-cards-more-btn');
+					const modal = document.getElementById('nav-cards-modal');
+					const closeBtn = document.getElementById('nav-cards-modal-close');
+
+					if (!moreBtn || !modal || !closeBtn) return;
+
+					function openModal() {
+						modal.classList.remove('hidden');
+						modal.classList.add('flex');
+						modal.setAttribute('aria-hidden', 'false');
+						document.body.style.overflow = 'hidden';
+						closeBtn.focus();
+					}
+
+					function closeModal() {
+						modal.classList.add('hidden');
+						modal.classList.remove('flex');
+						modal.setAttribute('aria-hidden', 'true');
+						document.body.style.overflow = '';
+						moreBtn.focus();
+					}
+
+					moreBtn.addEventListener('click', openModal);
+					closeBtn.addEventListener('click', closeModal);
+
+					// 点击背景关闭
+					modal.addEventListener('click', function(e) {
+						if (e.target === modal) {
+							closeModal();
+						}
+					});
+
+					// ESC 关闭
+					document.addEventListener('keydown', function(e) {
+						if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+							closeModal();
+						}
+					});
+				})();
+			</script>
+		)}
+	</>
+)}

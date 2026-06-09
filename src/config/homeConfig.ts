@@ -74,4 +74,34 @@ export const homeConfig: HomeConfig = {
 			// }
 		],
 	},
+
+	// 导航卡片配置
+	navCards: {
+		// 是否启用导航卡片（false 可关闭显示）
+		enable: true,
+		// 每行显示的卡片数量（默认4）
+		columns: 4,
+		// 是否显示更多按钮（默认false，"更多"按钮占据一格）
+		showMoreButton: false,
+		// 最多显示的行数（showMoreButton 为 false 时生效，0 表示不限制）
+		maxRows: 2,
+		// 导航卡片列表
+		items: [
+			// 可配置的字段：
+			// title: 卡片标题（必填）
+			// url: 链接地址（必填）
+			// description: 卡片描述（可选）
+			// icon: 图标名称（可选），使用 iconify 格式，如 "material-symbols:home"
+			// image: 图片 URL（可选），优先级高于 icon
+			{ title: "Stellar 仓库", url: "https://github.com/Srlily/Stellar", description: "开源个人主页项目", icon: "mdi:github" },
+			{ title: "Srlily", url: "https://github.com/Srlily", description: "GitHub", icon: "mdi:github" },
+			{ title: "nulijiazaizhong", url: "https://github.com/nulijiazaizhong", description: "GitHub", icon: "mdi:github" },
+			{ title: "技术博客", url: "https://blog.example.com", description: "分享技术文章与教程", icon: "material-symbols:article-outline-rounded" },
+			{ title: "在线工具", url: "https://tool.example.com", description: "常用开发工具集合", icon: "material-symbols:build-outline-rounded" },
+			{ title: "图床服务", url: "https://img.example.com", description: "图片托管与分享", icon: "material-symbols:image-outline-rounded" },
+			{ title: "API 文档", url: "https://api.example.com", description: "接口文档与示例", icon: "material-symbols:code-rounded" },
+			{ title: "演示站点", url: "https://demo.example.com", description: "在线演示与预览", icon: "material-symbols:play-circle-outline-rounded" },
+			{ title: "问题反馈", url: "https://github.com/Srlily/Stellar/issues", description: "提交 Bug 或建议", icon: "material-symbols:feedback-outline-rounded" },
+		],
+	},
 };
