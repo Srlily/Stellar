@@ -85,6 +85,12 @@ export const homeConfig: HomeConfig = {
 		showMoreButton: false,
 		// 最多显示的行数（showMoreButton 为 false 时生效，0 表示不限制）
 		maxRows: 2,
+		// 是否自动解析网站的 favicon 图标（默认true，优先级低于 image 和 icon）
+		autoFavicon: false,
+		// 自动解析的 favicon 图标大小（默认48，单位px）
+		faviconSize: 32,
+		// icon 图标大小（默认24，单位px）
+		iconSize: 32,
 		// 导航卡片列表
 		items: [
 			// 可配置的字段：
@@ -93,15 +99,75 @@ export const homeConfig: HomeConfig = {
 			// description: 卡片描述（可选）
 			// icon: 图标名称（可选），使用 iconify 格式，如 "material-symbols:home"
 			// image: 图片 URL（可选），优先级高于 icon
-			{ title: "Stellar 仓库", url: "https://github.com/Srlily/Stellar", description: "开源个人主页项目", icon: "mdi:github" },
-			{ title: "Srlily", url: "https://github.com/Srlily", description: "GitHub", icon: "mdi:github" },
-			{ title: "nulijiazaizhong", url: "https://github.com/nulijiazaizhong", description: "GitHub", icon: "mdi:github" },
+			{ title: "Stellar 仓库", url: "https://github.com/Srlily/Stellar", description: "开源个人主页项目", icon: "fa7-brands:github" },
+			{ title: "Srlily", url: "https://github.com/Srlily", description: "GitHub", icon: "fa7-brands:github" },
+			{ title: "nulijiazaizhong", url: "https://github.com/nulijiazaizhong", description: "GitHub", icon: "fa7-brands:github" },
 			{ title: "技术博客", url: "https://blog.example.com", description: "分享技术文章与教程", icon: "material-symbols:article-outline-rounded" },
 			{ title: "在线工具", url: "https://tool.example.com", description: "常用开发工具集合", icon: "material-symbols:build-outline-rounded" },
 			{ title: "图床服务", url: "https://img.example.com", description: "图片托管与分享", icon: "material-symbols:image-outline-rounded" },
 			{ title: "API 文档", url: "https://api.example.com", description: "接口文档与示例", icon: "material-symbols:code-rounded" },
 			{ title: "演示站点", url: "https://demo.example.com", description: "在线演示与预览", icon: "material-symbols:play-circle-outline-rounded" },
 			{ title: "问题反馈", url: "https://github.com/Srlily/Stellar/issues", description: "提交 Bug 或建议", icon: "material-symbols:feedback-outline-rounded" },
+		],
+	},
+
+	// 技能卡片配置
+	skillCards: {
+		// 是否启用技能卡片
+		enable: true,
+		// 每行显示的技能数量（默认4）
+		columns: 2,
+		// 图标大小（默认24，单位px）
+		iconSize: 24,
+		// 进度条渐变色配置（可选）
+		gradient: {
+			colors: ["#4ade80", "#22c55e", "#16a34a"], // 绿色渐变
+			direction: "right", // 渐变方向：left(从右到左)、right(从左到右)、center(从中间向两边)
+		},
+		// 技能列表
+		items: [
+			// 可配置的字段：
+			// name: 技能名称（必填）
+			// level: 熟练度 1-100（可选）
+			{ name: "TypeScript", level: 85 },
+			{ name: "JavaScript", level: 90 },
+			{ name: "React", level: 75 },
+			{ name: "Vue.js", level: 80 },
+			{ name: "Node.js", level: 70 },
+			{ name: "Python", level: 65 },
+			{ name: "Git", level: 85 },
+			{ name: "CSS/SCSS", level: 80 },
+		],
+	},
+
+	// 项目卡片配置
+	projectCards: {
+		// 是否启用项目卡片
+		enable: true,
+		// 每行显示的项目数量（默认3）
+		columns: 3,
+		// 是否显示更多按钮（默认false，"更多"按钮占据一格）
+		showMoreButton: false,
+		// 最多显示的行数（showMoreButton 为 false 时生效，0 表示不限制）
+		maxRows: 2,
+		// 图标大小（默认24，单位px）
+		iconSize: 32,
+		// 项目列表
+		items: [
+			// 可配置的字段：
+			// name: 项目名称（必填）
+			// url: 项目链接（必填）
+			// description: 项目描述（可选）
+			// image: 项目图片（可选）
+			// icon: 项目图标（可选）
+			// tags: 项目标签（可选）
+			{ name: "Blog", url: "https://blog.example.com", description: "基于 Next.js 的技术博客", icon: "material-symbols:article-outline-rounded", tags: ["Next.js", "React", "TypeScript"] },
+			{ name: "Dashboard", url: "https://dashboard.example.com", description: "数据可视化监控面板", icon: "material-symbols:dashboard-outline-rounded", tags: ["Vue.js", "ECharts", "Node.js"] },
+			{ name: "Mall", url: "https://mall.example.com", description: "电商系统前端项目", icon: "material-symbols:shopping-cart-outline-rounded", tags: ["React", "Redux", "Ant Design"] },
+			{ name: "Chat", url: "https://chat.example.com", description: "实时聊天应用", icon: "material-symbols:chat-outline-rounded", tags: ["Socket.io", "Express", "MongoDB"] },
+			{ name: "Wiki", url: "https://wiki.example.com", description: "团队知识库系统", icon: "material-symbols:menu-book-outline-rounded", tags: ["Nuxt.js", "Markdown", "PostgreSQL"] },
+			{ name: "Calendar", url: "https://calendar.example.com", description: "日程管理工具", icon: "material-symbols:event-outline-rounded", tags: ["React", "FullCalendar", "NestJS"] },
+			{ name: "Music", url: "https://music.example.com", description: "在线音乐播放器", icon: "material-symbols:music-note-outline-rounded", tags: ["Vue3", "AUDIO", "Web Audio API"] },
 		],
 	},
 };

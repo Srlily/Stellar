@@ -26,6 +26,13 @@ const cards = navCards?.items || [];
 const columns = navCards?.columns || 4; // 默认每行4个
 const showMoreButton = navCards?.showMoreButton !== false; // 默认显示更多按钮
 const maxRows = navCards?.maxRows || 0; // 0 表示不限制行数
+const autoFavicon = navCards?.autoFavicon !== false; // 默认自动解析 favicon
+const faviconSize = navCards?.faviconSize || 48; // favicon 图标大小（单位px）
+const iconSize = navCards?.iconSize || 24; // icon 图标大小（单位px）
+
+// 弹窗内图标缩放比例
+const MODAL_ICON_SCALE = 0.8; // 弹窗内图标相对于原始尺寸的缩放比例
+const ARROW_ICON_SCALE = 0.7; // 箭头图标相对于弹窗图标的缩放比例
 
 // 过滤掉未配置或 URL 为空的卡片
 const validCards = cards.filter((card) => card.url && card.url.trim() !== "");
@@ -89,7 +96,8 @@ async function fetchFaviconFromPage(pageUrl: string): Promise<string | null> {
 
 // 获取图标的 URL（使用 SSR 获取真实 favicon）
 async function getCardWithFavicon(card: any) {
-	if (card.url.startsWith("/")) {
+	// 如果未开启自动解析 favicon 或为内部链接，返回 null
+	if (!autoFavicon || card.url.startsWith("/")) {
 		return { ...card, faviconUrl: null };
 	}
 	
@@ -153,32 +161,35 @@ const hasMore = modalCards.length > 0;
 									/>
 								) : card.url.startsWith("/") ? (
 									card.icon ? (
-										<Icon name={card.icon} size="1.5rem" />
+										<Icon name={card.icon} size={`${iconSize}px`} />
 									) : (
-										<Icon name="material-symbols:link" size="1.5rem" />
-								)
-							) : (
-								<>
-									{card.faviconUrl && (
-										<img
-											src={card.faviconUrl}
-											alt={card.title}
-											class="h-full w-full object-contain"
-											loading="lazy"
-											decoding="async"
-											onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-											style="display: flex;"
-										/>
-									)}
-									<span class:list={["h-full w-full items-center justify-center", card.faviconUrl ? "hidden" : "flex"]} style={card.faviconUrl ? "display: none;" : ""}>
-										{card.icon ? (
-											<Icon name={card.icon} size="1.5rem" />
-										) : (
-											<Icon name="material-symbols:link" size="1.5rem" />
+										<Icon name="material-symbols:link" size={`${iconSize}px`} />
+									)
+								) : (
+									<>
+										{card.faviconUrl && (
+											<img
+												src={card.faviconUrl}
+												alt={card.title}
+												class="object-contain"
+												loading="lazy"
+												decoding="async"
+												onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+												style={`display: flex; width: ${faviconSize}px; height: ${faviconSize}px;`}
+											/>
 										)}
-									</span>
-								</>
-							)}
+										<span
+											class:list={["items-center justify-center", card.faviconUrl ? "hidden" : "flex"]}
+											style={card.faviconUrl ? `display: none;` : `display: flex;`}
+										>
+											{card.icon ? (
+												<Icon name={card.icon} size={`${iconSize}px`} />
+											) : (
+												<Icon name="material-symbols:link" size={`${iconSize}px`} />
+											)}
+										</span>
+									</>
+								)}
 							</div>
 
 							{/* 文字内容 */}
@@ -214,7 +225,7 @@ const hasMore = modalCards.length > 0;
 							aria-label={`查看更多 ${modalCards.length} 个链接`}
 						>
 							<div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-700">
-								<Icon name="material-symbols:add-rounded" size="1.5rem" />
+								<Icon name="material-symbols:add-rounded" size={`${iconSize}px`} />
 							</div>
 							<div class="flex flex-col gap-1 min-w-0 flex-1 text-left">
 								<h3 class="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -249,7 +260,7 @@ const hasMore = modalCards.length > 0;
 							class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
 							aria-label="关闭"
 						>
-							<Icon name="material-symbols:close-rounded" size="1.25rem" />
+							<Icon name="material-symbols:close-rounded" size={`${iconSize * MODAL_ICON_SCALE}px`} />
 						</button>
 					</div>
 
@@ -273,9 +284,9 @@ const hasMore = modalCards.length > 0;
 										/>
 									) : card.url.startsWith("/") ? (
 										card.icon ? (
-											<Icon name={card.icon} size="1.25rem" />
+											<Icon name={card.icon} size={`${iconSize * MODAL_ICON_SCALE}px`} />
 										) : (
-											<Icon name="material-symbols:link" size="1.25rem" />
+											<Icon name="material-symbols:link" size={`${iconSize * MODAL_ICON_SCALE}px`} />
 										)
 									) : (
 										<>
@@ -283,18 +294,21 @@ const hasMore = modalCards.length > 0;
 												<img
 													src={card.faviconUrl}
 													alt={card.title}
-													class="h-full w-full object-contain"
+													class="object-contain"
 													loading="lazy"
 													decoding="async"
 													onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-													style="display: flex;"
+													style={`display: flex; width: ${faviconSize * MODAL_ICON_SCALE}px; height: ${faviconSize * MODAL_ICON_SCALE}px;`}
 												/>
 											)}
-											<span class:list={["h-full w-full items-center justify-center", card.faviconUrl ? "hidden" : "flex"]} style={card.faviconUrl ? "display: none;" : ""}>
+											<span
+												class:list={["items-center justify-center", card.faviconUrl ? "hidden" : "flex"]}
+												style={card.faviconUrl ? `display: none;` : `display: flex;`}
+											>
 												{card.icon ? (
-													<Icon name={card.icon} size="1.25rem" />
+													<Icon name={card.icon} size={`${iconSize * MODAL_ICON_SCALE}px`} />
 												) : (
-													<Icon name="material-symbols:link" size="1.25rem" />
+													<Icon name="material-symbols:link" size={`${iconSize * MODAL_ICON_SCALE}px`} />
 												)}
 											</span>
 										</>
@@ -311,7 +325,7 @@ const hasMore = modalCards.length > 0;
 									)}
 								</div>
 								<div class="shrink-0 opacity-0 transition-opacity duration-200 group-hover/card:opacity-100">
-									<Icon name="material-symbols:arrow-forward-rounded" size="0.875rem" />
+									<Icon name="material-symbols:arrow-forward-rounded" size={`${iconSize * MODAL_ICON_SCALE * ARROW_ICON_SCALE}px`} />
 								</div>
 							</a>
 						))}

@@ -1,0 +1,101 @@
+---
+/**
+ * 项目卡片组件
+ * 展示用户参与的项目
+ */
+import { homeConfig } from "@/config/homeConfig";
+import Icon from "@/components/Icon.astro";
+
+interface Props {
+	class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+
+// 获取项目卡片配置
+const projectCards = homeConfig.projectCards;
+const isEnabled = projectCards?.enable !== false;
+const projects = projectCards?.items || [];
+const columns = projectCards?.columns || 3;
+
+// 过滤掉无效的项目
+const validProjects = projects.filter((project) => project.name && project.name.trim() !== "" && project.url && project.url.trim() !== "");
+---
+
+{isEnabled && validProjects.length > 0 && (
+	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80", className]}>
+		{/* 头部 */}
+		<div class="mb-6 flex items-center gap-2">
+			<Icon name="material-symbols:folder-outline-rounded" size="1.5rem" class="text-primary-500" />
+			<h2 class="text-base font-semibold text-slate-700 dark:text-slate-300">
+				项目
+			</h2>
+		</div>
+
+		{/* 项目列表 */}
+		<div class={`grid gap-4 md:grid-cols-2 ${columns >= 3 ? "lg:grid-cols-3" : "lg:grid-cols-2"}`}>
+			{validProjects.map((project) => (
+				<a
+					href={project.url}
+					target={project.url.startsWith("/") ? "_self" : "_blank"}
+					rel={project.url.startsWith("/") ? "" : "noopener noreferrer"}
+					class="group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400"
+				>
+					{/* 项目图片或图标 */}
+					<div class="relative h-24 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
+						{project.image ? (
+							<img
+								src={project.image}
+								alt={project.name}
+								class="h-full w-full object-cover transition-transform duration-300 group-hover/card:scale-105"
+								loading="lazy"
+								decoding="async"
+							/>
+						) : (
+							<div class="flex h-full w-full items-center justify-center">
+								{project.icon ? (
+									<Icon name={project.icon} size="2.5rem" class="text-slate-400" />
+								) : (
+									<Icon name="material-symbols:folder-outline-rounded" size="2.5rem" class="text-slate-400" />
+								)}
+							</div>
+						)}
+					</div>
+
+					{/* 项目信息 */}
+					<div class="flex flex-col gap-1">
+						<h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover/card:text-primary-500 transition-colors">
+							{project.name}
+						</h3>
+						{project.description && (
+							<p class="line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
+								{project.description}
+							</p>
+						)}
+					</div>
+
+					{/* 项目标签 */}
+					{project.tags && project.tags.length > 0 && (
+						<div class="flex flex-wrap gap-1.5">
+							{project.tags.slice(0, 3).map((tag) => (
+								<span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-600 dark:text-slate-300">
+									{tag}
+								</span>
+							))}
+							{project.tags.length > 3 && (
+								<span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-600 dark:text-slate-400">
+									+{project.tags.length - 3}
+								</span>
+							)}
+						</div>
+					)}
+
+					{/* 箭头图标 */}
+					<div class="absolute right-3 top-3 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100">
+						<Icon name="material-symbols:arrow-forward-rounded" size="1rem" class="text-primary-500" />
+					</div>
+				</a>
+			))}
+		</div>
+	</section>
+)}

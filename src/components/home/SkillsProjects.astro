@@ -1,0 +1,575 @@
+---
+/**
+ * 技能与项目选项卡组件
+ * 展示技能熟练度和项目
+ */
+import { homeConfig } from "@/config/homeConfig";
+import Icon from "@/components/Icon.astro";
+
+interface Props {
+	class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+
+// 获取技能卡片配置
+const skillCards = homeConfig.skillCards;
+const skillEnabled = skillCards?.enable !== false;
+const skills = skillCards?.items || [];
+const skillColumns = skillCards?.columns || 4;
+const iconSize = skillCards?.iconSize || 24;
+const gradientColors = skillCards?.gradient?.colors;
+const gradientDir = skillCards?.gradient?.direction || "right";
+const hasGradient = Array.isArray(gradientColors) && gradientColors.length >= 2;
+
+// 获取项目卡片配置
+const projectCards = homeConfig.projectCards;
+const projectEnabled = projectCards?.enable !== false;
+const projects = projectCards?.items || [];
+const projectColumns = projectCards?.columns || 3;
+const projectShowMore = projectCards?.showMoreButton !== false;
+const projectMaxRows = projectCards?.maxRows || 0;
+const projectIconSize = projectCards?.iconSize || 24;
+
+// 过滤技能
+const validSkills = skills.filter((skill) => skill.name && skill.name.trim() !== "");
+
+// 过滤项目
+const validProjects = projects.filter((project) => project.name && project.name.trim() !== "" && project.url && project.url.trim() !== "");
+
+// 计算项目分页
+// showMoreButton 为 true 时，预留一个"更多"按钮位置
+// showMoreButton 为 false 且 maxRows > 0 时，最多 maxRows 行
+// showMoreButton 为 false 且 maxRows 为 0 时，不限制
+const projectMaxSlots = projectShowMore
+	? projectColumns
+	: (projectMaxRows > 0 ? projectColumns * projectMaxRows : validProjects.length);
+const projectHasOverflow = validProjects.length > projectMaxSlots;
+const projectMaxVisible = projectHasOverflow ? projectMaxSlots - 1 : projectMaxSlots;
+const visibleProjects = validProjects.slice(0, projectMaxVisible);
+const modalProjects = validProjects.slice(projectMaxVisible);
+const projectHasMore = modalProjects.length > 0;
+
+// 转换方向
+const directionMap: Record<string, string> = {
+	left: "to left",
+	right: "to right",
+	center: "to right, var(--tw-gradient-stops)",
+};
+const cssDirection = directionMap[gradientDir] || "to right";
+
+// 进度条样式
+const progressStyle = hasGradient
+	? `background: linear-gradient(${cssDirection}, ${gradientColors.join(", ")});`
+	: "background-color: #22c55e;";
+
+// 检查是否需要显示选项卡
+const showTabs = skillEnabled && projectEnabled && validSkills.length > 0 && validProjects.length > 0;
+const onlySkills = skillEnabled && validSkills.length > 0 && (!projectEnabled || validProjects.length === 0);
+const onlyProjects = projectEnabled && validProjects.length > 0 && (!skillEnabled || validSkills.length === 0);
+
+// 根据 columns 生成 Tailwind 类名
+function getProjectGridClass(cols: number): string {
+	const gridClasses: Record<number, string> = {
+		2: "grid-cols-2",
+		3: "grid-cols-3",
+		4: "grid-cols-4",
+		5: "grid-cols-5",
+		6: "grid-cols-6",
+	};
+	return gridClasses[cols] || "grid-cols-4";
+}
+const projectGridClass = getProjectGridClass(projectColumns);
+---
+
+{showTabs && (
+	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80", className]}>
+		{/* 选项卡标题 */}
+		<div class="tabs-container relative mb-6 flex rounded-lg bg-slate-100 p-1 dark:bg-slate-700/50">
+			{/* 滑动指示器 */}
+			<div id="tab-indicator" class="tab-indicator absolute top-1 h-[calc(100%-8px)] w-[calc(50%-4px)] rounded-md bg-slate-200 shadow-sm transition-all duration-300 ease-out dark:bg-slate-600"></div>
+			{/* 技能按钮 */}
+			<button
+				type="button"
+				class="tab-btn skill-tab relative z-10 flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-slate-900 dark:text-slate-100 transition-colors duration-200"
+				data-tab="skill"
+			>
+				<Icon name="material-symbols:build-outline-rounded" size="1rem" />
+				技能点
+			</button>
+			{/* 项目按钮 */}
+			<button
+				type="button"
+				class="tab-btn project-tab relative z-10 flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors duration-200"
+				data-tab="project"
+			>
+				<Icon name="material-symbols:folder-outline-rounded" size="1rem" />
+				项目
+			</button>
+		</div>
+
+		{/* 技能内容 */}
+		<div id="skill-content" class="tab-content min-h-[200px]">
+			<ul class={`relative grid gap-x-6 gap-y-3 ${skillColumns >= 4 ? 'md:grid-cols-2 lg:grid-cols-4' : skillColumns >= 3 ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}>
+				{validSkills.map((skill) => (
+					<li class="skill-item flex flex-col gap-1.5">
+						<div class="flex justify-between">
+							<label class="text-xs font-medium text-slate-700 dark:text-slate-300">
+								{skill.name}
+							</label>
+							<span class="text-xs font-medium text-slate-500 dark:text-slate-400">
+								{skill.level || 0}%
+							</span>
+						</div>
+						<div class="relative h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-600">
+							<div
+								class="absolute h-full rounded-full"
+								style={`${progressStyle} width: ${skill.level || 0}%;`}
+							></div>
+						</div>
+					</li>
+				))}
+			</ul>
+		</div>
+
+		{/* 项目内容 */}
+		<div id="project-content" class="tab-content hidden min-h-[200px]">
+			<div class={`grid ${projectGridClass} gap-x-6 gap-y-3`}>
+				{visibleProjects.map((project) => (
+					<a
+						href={project.url}
+						target={project.url.startsWith("/") ? "_self" : "_blank"}
+						rel={project.url.startsWith("/") ? "" : "noopener noreferrer"}
+						class="group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400"
+					>
+						{/* 项目图片或图标 */}
+						<div class="relative h-16 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
+							{project.image ? (
+								<img
+									src={project.image}
+									alt={project.name}
+									class="h-full w-full object-cover transition-transform duration-300 group-hover/card:scale-105"
+									loading="lazy"
+									decoding="async"
+								/>
+							) : (
+								<div class="flex h-full w-full items-center justify-center">
+									{project.icon ? (
+										<Icon name={project.icon} size={`${projectIconSize}px`} class="text-slate-400" />
+									) : (
+										<Icon name="material-symbols:folder-outline-rounded" size={`${projectIconSize}px`} class="text-slate-400" />
+									)}
+								</div>
+							)}
+						</div>
+
+						{/* 项目信息 */}
+						<div class="flex flex-col gap-1">
+							<h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover/card:text-primary-500 transition-colors">
+								{project.name}
+							</h3>
+							{project.description && (
+								<p class="line-clamp-1 text-xs text-slate-500 dark:text-slate-400">
+									{project.description}
+								</p>
+							)}
+						</div>
+
+						{/* 项目标签 */}
+						{project.tags && project.tags.length > 0 && (
+							<div class="project-tags-container flex flex-nowrap gap-1 overflow-hidden">
+								{project.tags.map((tag, index) => (
+									<span class="project-tag inline-flex items-center whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-600 dark:text-slate-300" data-index={index}>
+										{tag}
+									</span>
+								))}
+							</div>
+						)}
+					</a>
+				))}
+
+				{/* 更多按钮 */}
+				{projectHasMore && (
+					<button
+						type="button"
+						class="group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400 cursor-pointer"
+						id="project-modal-open"
+					>
+						<div class="relative h-16 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
+							<div class="flex h-full w-full items-center justify-center">
+								<Icon name="material-symbols:add-rounded" size={`${projectIconSize}px`} class="text-slate-400" />
+							</div>
+						</div>
+						<div class="flex flex-col items-start gap-1">
+							<h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover/card:text-primary-500 transition-colors">查看更多</h3>
+							<p class="line-clamp-1 text-xs text-slate-500 dark:text-slate-400">还有 {modalProjects.length} 个项目</p>
+						</div>
+					</button>
+				)}
+			</div>
+		</div>
+
+		{/* 选项卡脚本 */}
+		<script is:inline>
+			(function() {
+				const skillTab = document.querySelector('.skill-tab');
+				const projectTab = document.querySelector('.project-tab');
+				const tabIndicator = document.getElementById('tab-indicator');
+				const skillContent = document.getElementById('skill-content');
+				const projectContent = document.getElementById('project-content');
+
+				// 项目弹窗相关
+				const projectMoreBtn = document.getElementById('project-more-btn');
+				const projectModal = document.getElementById('project-modal');
+				const projectModalClose = document.getElementById('project-modal-close');
+
+				if (!skillTab || !projectTab || !tabIndicator || !skillContent || !projectContent) return;
+
+				function switchTab(tab) {
+					const isDark = document.documentElement.classList.contains('dark');
+					const activeColor = isDark ? 'rgb(226, 232, 240)' : 'rgb(15, 23, 42)';
+					const inactiveColor = isDark ? 'rgb(148, 163, 184)' : 'rgb(100, 116, 139)';
+
+					if (tab === 'skill') {
+						tabIndicator.style.left = '4px';
+						skillTab.style.color = activeColor;
+						skillTab.querySelector('svg').style.color = activeColor;
+						projectTab.style.color = inactiveColor;
+						projectTab.querySelector('svg').style.color = inactiveColor;
+						projectContent.classList.add('hidden');
+						skillContent.classList.remove('hidden');
+					} else {
+						tabIndicator.style.left = 'calc(50%)';
+						projectTab.style.color = activeColor;
+						projectTab.querySelector('svg').style.color = activeColor;
+						skillTab.style.color = inactiveColor;
+						skillTab.querySelector('svg').style.color = inactiveColor;
+						skillContent.classList.add('hidden');
+						projectContent.classList.remove('hidden');
+						// 切换到项目选项卡时派发事件
+						document.dispatchEvent(new CustomEvent('check-tag-overflow'));
+					}
+				}
+
+				skillContent.style.transition = 'opacity 0.15s ease';
+				projectContent.style.transition = 'opacity 0.15s ease';
+				switchTab('skill');
+
+				skillTab.addEventListener('click', () => switchTab('skill'));
+				projectTab.addEventListener('click', () => switchTab('project'));
+
+				// 项目弹窗
+				if (projectMoreBtn && projectModal && projectModalClose) {
+					projectMoreBtn.addEventListener('click', function() {
+						projectModal.classList.remove('hidden');
+						projectModal.classList.add('flex');
+						projectModal.setAttribute('aria-hidden', 'false');
+						document.body.style.overflow = 'hidden';
+					});
+
+					projectModalClose.addEventListener('click', function() {
+						projectModal.classList.add('hidden');
+						projectModal.classList.remove('flex');
+						projectModal.setAttribute('aria-hidden', 'true');
+						document.body.style.overflow = '';
+						projectMoreBtn.focus();
+					});
+
+					projectModal.addEventListener('click', function(e) {
+						if (e.target === projectModal) {
+							projectModalClose.click();
+						}
+					});
+
+					document.addEventListener('keydown', function(e) {
+						if (e.key === 'Escape' && !projectModal.classList.contains('hidden')) {
+							projectModalClose.click();
+						}
+					});
+				}
+			})();
+		</script>
+	</section>
+)}
+
+{onlySkills && (
+	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80", className]}>
+		{/* 头部 */}
+		<div class="mb-6 flex items-center gap-2">
+			<Icon name="material-symbols:build-outline-rounded" size={`${iconSize}px`} class="text-primary-500" />
+			<h2 class="text-sm font-medium text-slate-700 dark:text-slate-300">
+				技能点
+			</h2>
+		</div>
+
+		{/* 技能列表 */}
+		<div class="min-h-[200px]">
+			<ul class={`relative grid gap-x-6 gap-y-3 ${skillColumns >= 4 ? 'md:grid-cols-2 lg:grid-cols-4' : skillColumns >= 3 ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}>
+				{validSkills.map((skill) => (
+					<li class="skill-item flex flex-col gap-1.5">
+						<div class="flex justify-between">
+							<label class="text-xs font-medium text-slate-700 dark:text-slate-300">
+								{skill.name}
+							</label>
+							<span class="text-xs font-medium text-slate-500 dark:text-slate-400">
+								{skill.level || 0}%
+							</span>
+						</div>
+						<div class="relative h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-600">
+							<div
+								class="absolute h-full rounded-full"
+								style={`${progressStyle} width: ${skill.level || 0}%;`}
+							></div>
+						</div>
+					</li>
+				))}
+			</ul>
+		</div>
+	</section>
+)}
+
+{onlyProjects && (
+	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80", className]}>
+		{/* 头部 */}
+		<div class="mb-6 flex items-center gap-2">
+			<Icon name="material-symbols:folder-outline-rounded" size={`${projectIconSize}px`} class="text-primary-500" />
+			<h2 class="text-base font-semibold text-slate-700 dark:text-slate-300">
+				项目
+			</h2>
+		</div>
+
+		{/* 项目列表 */}
+		<div class="min-h-[200px]">
+			<div class={`grid ${projectGridClass} gap-x-6 gap-y-3`}>
+				{visibleProjects.map((project) => (
+					<a
+						href={project.url}
+						target={project.url.startsWith("/") ? "_self" : "_blank"}
+						rel={project.url.startsWith("/") ? "" : "noopener noreferrer"}
+						class="group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400"
+					>
+						{/* 项目图片或图标 */}
+						<div class="relative h-20 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
+							{project.image ? (
+								<img
+									src={project.image}
+									alt={project.name}
+									class="h-full w-full object-cover transition-transform duration-300 group-hover/card:scale-105"
+									loading="lazy"
+									decoding="async"
+								/>
+							) : (
+								<div class="flex h-full w-full items-center justify-center">
+									{project.icon ? (
+										<Icon name={project.icon} size="2rem" class="text-slate-400" />
+									) : (
+										<Icon name="material-symbols:folder-outline-rounded" size="2rem" class="text-slate-400" />
+									)}
+								</div>
+							)}
+						</div>
+
+						{/* 项目信息 */}
+						<div class="flex flex-col gap-1">
+							<h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover/card:text-primary-500 transition-colors">
+								{project.name}
+							</h3>
+							{project.description && (
+								<p class="line-clamp-1 text-xs text-slate-500 dark:text-slate-400">
+									{project.description}
+								</p>
+							)}
+						</div>
+
+						{/* 项目标签 */}
+						{project.tags && project.tags.length > 0 && (
+							<div class="project-tags-container flex flex-nowrap gap-1 overflow-hidden">
+								{project.tags.map((tag, index) => (
+									<span class="project-tag inline-flex items-center whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-600 dark:text-slate-300" data-index={index}>
+										{tag}
+									</span>
+								))}
+							</div>
+						)}
+					</a>
+				))}
+
+				{/* 更多按钮 */}
+				{projectHasMore && (
+					<button
+						type="button"
+						class="group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400 cursor-pointer"
+						id="project-modal-open"
+					>
+						<div class="relative h-20 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
+							<div class="flex h-full w-full items-center justify-center">
+								<Icon name="material-symbols:add-rounded" size={`${projectIconSize}px`} class="text-slate-400" />
+							</div>
+						</div>
+						<div class="flex flex-col items-start gap-1">
+							<h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover/card:text-primary-500 transition-colors">查看更多</h3>
+							<p class="line-clamp-1 text-xs text-slate-500 dark:text-slate-400">还有 {modalProjects.length} 个项目</p>
+						</div>
+					</button>
+				)}
+			</div>
+		</div>
+	</section>
+)}
+
+{/* 项目弹窗 - 统一公共组件 */}
+{projectHasMore && (
+	<div
+		id="project-modal"
+		class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+		aria-hidden="true"
+	>
+		<div class="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+			<div class="mb-4 flex items-center justify-between">
+				<h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">更多项目</h2>
+				<button
+					type="button"
+					id="project-modal-close"
+					class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+				>
+					<Icon name="material-symbols:close-rounded" size="1.25rem" />
+				</button>
+			</div>
+			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				{modalProjects.map((project) => (
+					<a
+						href={project.url}
+						target={project.url.startsWith("/") ? "_self" : "_blank"}
+						rel={project.url.startsWith("/") ? "" : "noopener noreferrer"}
+						class="group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:border-primary-400 hover:shadow-lg dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400"
+					>
+						<div class="flex flex-col gap-1">
+							<h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover/card:text-primary-500 transition-colors">
+								{project.name}
+							</h3>
+							{project.description && (
+								<p class="line-clamp-1 text-xs text-slate-500 dark:text-slate-400">
+									{project.description}
+								</p>
+							)}
+						</div>
+						{project.tags && project.tags.length > 0 && (
+							<div class="project-tags-container flex flex-nowrap gap-1 overflow-hidden">
+								{project.tags.map((tag, index) => (
+									<span class="project-tag inline-flex items-center whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-600 dark:text-slate-300" data-index={index}>
+										{tag}
+									</span>
+								))}
+							</div>
+						)}
+					</a>
+				))}
+			</div>
+		</div>
+	</div>
+)}
+
+{/* 项目弹窗控制脚本 */}
+<script is:inline>
+	(function() {
+		const moreBtn = document.getElementById('project-modal-open');
+		const modal = document.getElementById('project-modal');
+		const closeBtn = document.getElementById('project-modal-close');
+		if (!moreBtn || !modal || !closeBtn) return;
+		moreBtn.addEventListener('click', function() {
+			modal.classList.remove('hidden');
+			modal.classList.add('flex');
+			modal.setAttribute('aria-hidden', 'false');
+			document.body.style.overflow = 'hidden';
+			// 弹窗打开后检测标签溢出
+			requestAnimationFrame(function() {
+				requestAnimationFrame(handleTagOverflow);
+			});
+		});
+		closeBtn.addEventListener('click', function() {
+			modal.classList.add('hidden');
+			modal.classList.remove('flex');
+			modal.setAttribute('aria-hidden', 'true');
+			document.body.style.overflow = '';
+			moreBtn.focus();
+		});
+		modal.addEventListener('click', function(e) {
+			if (e.target === modal) closeBtn.click();
+		});
+		document.addEventListener('keydown', function(e) {
+			if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeBtn.click();
+		});
+
+		// 标签溢出检测 - 简化版
+		function handleTagOverflow() {
+			document.querySelectorAll('.project-tags-container').forEach(function(container) {
+				const tags = Array.from(container.querySelectorAll('.project-tag'));
+				if (tags.length <= 1) return;
+
+				// 重置所有标签
+				tags.forEach(tag => {
+					tag.style.display = '';
+				});
+
+				// 检查是否溢出
+				if (container.scrollWidth <= container.clientWidth) {
+					// 没有溢出，移除 badge
+					const badge = container.querySelector('.tag-overflow-badge');
+					if (badge) badge.style.display = 'none';
+					return;
+				}
+
+				// 溢出：从后往前逐个隐藏直到不溢出
+				let hiddenCount = 0;
+				for (let i = tags.length - 1; i >= 0; i--) {
+					tags[i].style.display = 'none';
+					hiddenCount++;
+					if (container.scrollWidth <= container.clientWidth) {
+						break;
+					}
+				}
+
+				// 添加 +N badge
+				if (hiddenCount > 0) {
+					let overflowBadge = container.querySelector('.tag-overflow-badge');
+					if (!overflowBadge) {
+						overflowBadge = document.createElement('span');
+						overflowBadge.className = 'tag-overflow-badge inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-600 dark:text-slate-300';
+						container.appendChild(overflowBadge);
+					}
+					overflowBadge.textContent = '+' + hiddenCount;
+					overflowBadge.style.display = '';
+				}
+			});
+		}
+
+		// 初始化 - 立即运行和延迟运行确保布局完成
+		function initTagOverflow() {
+			handleTagOverflow();
+			requestAnimationFrame(function() {
+				handleTagOverflow();
+			});
+		}
+
+		// 立即尝试（元素可能已加载）
+		if (document.readyState === 'complete') {
+			initTagOverflow();
+		} else if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', initTagOverflow);
+		} else {
+			initTagOverflow();
+		}
+
+		window.addEventListener('resize', handleTagOverflow);
+		window.addEventListener('load', function() {
+			requestAnimationFrame(handleTagOverflow);
+			setTimeout(handleTagOverflow, 200);
+		});
+		// 监听切换选项卡事件
+		document.addEventListener('check-tag-overflow', function() {
+			requestAnimationFrame(function() {
+				requestAnimationFrame(handleTagOverflow);
+			});
+		});
+	})();
+</script>
