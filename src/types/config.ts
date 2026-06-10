@@ -5,6 +5,13 @@ import { LIGHT_MODE, DARK_MODE, SYSTEM_MODE } from "../constants/index";
 // 背景模式类型
 export type BackgroundMode = "fullscreen" | "overlay" | "none";
 
+// 背景加载动画类型
+// - shimmer: 流光扫描效果
+// - pulse: 呼吸脉冲效果
+// - wave: 波纹扩散效果
+// - none: 无加载动画，直接淡入
+export type BackgroundLoadingEffect = "shimmer" | "pulse" | "wave" | "none";
+
 // 背景图片源配置
 // 支持格式：
 // - string: 所有模式共用同一张图片
@@ -33,6 +40,7 @@ export interface BackgroundConfig {
 	src: BackgroundImageSource;
 	fullscreen: FullscreenConfig;
 	overlay: OverlayConfig;
+	loadingEffect?: BackgroundLoadingEffect; // 加载动画效果，默认 "shimmer"
 }
 
 // ==================== 主页配置类型 ====================
