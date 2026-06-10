@@ -75,6 +75,60 @@ export const homeConfig: HomeConfig = {
 		],
 	},
 
+	// 时间与天气卡片配置
+	timeWeather: {
+		// 是否启用时间与天气卡片（false 可关闭显示）
+		enable: true,
+		// 布局模式："double"（双卡片，默认）| "single"（单卡片合并显示）
+		layout: "single",
+		// 是否显示"当前时间"和"天气"标签文字（默认 true）
+		showLabels: true,
+		// 卡片内文字对齐方式："left"（左对齐）| "center"（居中）| "right"（右对齐）
+		align: "center",
+		// 时间显示配置
+		time: {
+			// 是否启用时间显示
+			enable: true,
+			// 时间格式："12" (12小时制) | "24" (24小时制)
+			format: "24",
+			// 是否显示秒
+			showSeconds: true,
+			// 是否显示日期
+			showDate: true,
+			// 单卡片下日期是否与时间同行显示（默认 false，日期另起一行）
+			dateInline: false,
+		},
+		// 天气显示配置
+		weather: {
+			// 是否启用天气显示
+			enable: true,
+			// 城市名称（wttr/WeatherAPI/QWeather 使用，留空自动 IP 定位）
+			city: "",
+			// 高德城市编码（仅 amap 使用，如 "110000" 北京、"320100" 南京）
+			// 查询地址：https://lbs.amap.com/api/webservice/guide/api/weather
+			cityCode: "",
+			// 经纬度坐标（仅 caiyun 使用，如 "116.41,39.92"）
+			// 格式：经度,纬度
+			location: "",
+			// 天气 API 来源（默认 "wttr"，无需 API Key）
+			// "wttr"            - wttr.in，免费无需 Key，自动 IP 定位
+			// "weatherapi"      - WeatherAPI.com，免费 100万次/月
+			// "qweather"        - 和风天气，JWT 认证，支持简体中文
+			// "amap"            - 高德天气，免费额度，原生中文，需要 cityCode
+			// "caiyun"          - 彩云天气，免费额度，需要 location 经纬度
+			apiSource: "wttr",
+			// 对应 API 的 Key（wttr 不需要，其他 API 必填）
+			// WeatherAPI.com:   https://www.weatherapi.com/
+			// 和风天气:         https://dev.qweather.com/ （JWT 认证，需同时填 privateKey）
+			// 高德天气:         https://lbs.amap.com/
+			// 彩云天气:         https://dashboard.caiyunapp.com/
+			apiKey: "",
+			// 和风天气 Private Key（仅 qweather 使用，用于生成 JWT Token）
+			// 在和风天气控制台 → 项目管理 → 认证认证 获取
+			privateKey: "",
+		},
+	},
+
 	// 导航卡片配置
 	navCards: {
 		// 是否启用导航卡片（false 可关闭显示）

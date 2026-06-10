@@ -121,6 +121,40 @@ export interface NavCardsConfig {
 	iconSize?: number; // icon 图标大小（默认24，单位px）
 }
 
+// ==================== 时间与天气卡片类型 ====================
+
+// 天气 API 来源
+// - "wttr": wttr.in（免费，无需 API key，自动 IP 定位）
+// - "weatherapi": WeatherAPI.com（免费 100万次/月，支持 lang 参数）
+// - "qweather": 和风天气（免费额度，JWT 认证，支持简体中文）
+// - "amap": 高德天气（免费额度，原生中文，需要城市编码）
+// - "caiyun": 彩云天气（免费额度，需要经纬度坐标）
+export type WeatherApiSource = "wttr" | "weatherapi" | "qweather" | "amap" | "caiyun";
+
+// 时间与天气卡片配置
+export interface TimeWeatherConfig {
+	enable?: boolean; // 是否启用时间与天气卡片
+	layout?: "double" | "single"; // 布局模式：双卡片（默认）或单卡片
+	showLabels?: boolean; // 是否显示"当前时间"和"天气"标签文字，默认 true
+	align?: "left" | "center" | "right"; // 卡片内文字对齐方式，默认 "left"
+	time?: {
+		enable?: boolean; // 是否启用时间显示
+		format?: "12" | "24"; // 时间格式，默认 "24"
+		showSeconds?: boolean; // 是否显示秒，默认 true
+		showDate?: boolean; // 是否显示日期，默认 true
+		dateInline?: boolean; // 单卡片下日期是否与时间同行显示，默认 false
+	};
+	weather?: {
+		enable?: boolean; // 是否启用天气显示
+		city?: string; // 城市名称（wttr/WeatherAPI/QWeather 使用，留空自动 IP 定位）
+		cityCode?: string; // 高德城市编码（amap 使用，如 "110000"）
+		location?: string; // 经纬度坐标（caiyun 使用，如 "116.41,39.92"）
+		apiSource?: WeatherApiSource; // 天气 API 来源，默认 "wttr"
+		apiKey?: string; // 对应 API 的 Key（wttr 不需要）
+		privateKey?: string; // 和风天气 Private Key（JWT 认证用）
+	};
+}
+
 // ==================== 技能卡片类型 ====================
 
 // 技能卡片项
@@ -176,6 +210,7 @@ export interface HomeConfig {
 	customInfo?: CustomInfoItem[];
 	typewriter?: TypewriterConfig;
 	socialLinks?: SocialLinksConfig; // 社交链接配置
+	timeWeather?: TimeWeatherConfig; // 时间与天气卡片配置
 	navCards?: NavCardsConfig; // 导航卡片配置
 	skillCards?: SkillCardsConfig; // 技能卡片配置
 	projectCards?: ProjectCardsConfig; // 项目卡片配置

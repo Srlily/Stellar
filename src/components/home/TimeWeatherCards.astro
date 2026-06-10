@@ -1,0 +1,490 @@
+---
+/**
+ * 时间与天气卡片组件
+ * 在社媒链接和导航卡片之间显示当前时间和天气信息
+ *
+ * 布局：双卡片（默认）或单卡片
+ * 时间：客户端 JavaScript 实时更新
+ * 天气：支持多个 API 源（用户自行配置 apiSource + apiKey）
+ */
+import { homeConfig } from "@/config/homeConfig";
+import { siteConfig } from "@/config/siteConfig";
+import Icon from "@/components/Icon.astro";
+
+const tw = homeConfig.timeWeather;
+const isEnabled = tw?.enable !== false;
+
+const layout = tw?.layout || "double";
+const showLabels = tw?.showLabels !== false;
+const align = tw?.align || "left";
+const timeEnabled = tw?.time?.enable !== false;
+const weatherEnabled = tw?.weather?.enable !== false;
+const showSeconds = tw?.time?.showSeconds !== false;
+const showDate = tw?.time?.showDate !== false;
+const dateInline = tw?.time?.dateInline === true;
+const timeFormat = tw?.time?.format || "24";
+const weatherCity = tw?.weather?.city || "";
+const cityCode = tw?.weather?.cityCode || "";
+const weatherLocation = tw?.weather?.location || "";
+const apiSource = tw?.weather?.apiSource || "wttr";
+const apiKey = tw?.weather?.apiKey || "";
+const privateKey = tw?.weather?.privateKey || "";
+
+const siteLang = siteConfig.lang || "zh_CN";
+const isZh = siteLang.startsWith("zh");
+const isSingle = layout === "single";
+const bothEnabled = timeEnabled && weatherEnabled;
+
+// 双卡片容器对齐 class
+// 文字对齐 class
+const textAlign = align === "center" ? "text-center" : align === "right" ? "text-right" : "text-left";
+---
+
+{isEnabled && (timeEnabled || weatherEnabled) && (
+	isSingle ? (
+		/* ========== 单卡片模式（一行显示） ========== */
+		<section class="animate-on-scroll anim-fade-up stagger-1">
+			<div class:list={[
+				"group/card relative overflow-hidden rounded-2xl border border-slate-200 bg-white/80 px-6 py-4 backdrop-blur-sm w-full",
+				"transition-all duration-300",
+				"hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
+				"dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400",
+			]}>
+				{/* 标签行 */}
+				{showLabels && (timeEnabled || weatherEnabled) && (
+					<div class:list={[
+						"flex items-center gap-2 mb-2",
+						align === "center" ? "justify-center" : align === "right" ? "justify-end" : "justify-start",
+					]}>
+						{timeEnabled && (
+							<div class="flex items-center gap-1.5">
+								<Icon name="material-symbols:schedule-outline-rounded" size="0.875rem" />
+								<span class="text-xs text-slate-500 dark:text-slate-400">当前时间</span>
+							</div>
+						)}
+						{bothEnabled && <span class="text-slate-300 dark:text-slate-600 text-xs">|</span>}
+						{weatherEnabled && (
+							<div class="flex items-center gap-1.5">
+								<Icon name="material-symbols:cloud-outline" size="0.875rem" />
+								<span class="text-xs text-slate-500 dark:text-slate-400">天气</span>
+							</div>
+						)}
+					</div>
+				)}
+
+				{/* 内容行 */}
+				<div class:list={[
+					"flex items-center gap-4",
+					align === "center" ? "justify-center" : align === "right" ? "justify-end" : "justify-start",
+				]}>
+					{/* 时间区域 */}
+					{timeEnabled && (
+						<div class="flex items-baseline gap-2">
+							{showDate && (
+								<div id="tw-date-display" class="text-xl font-bold text-slate-900 dark:text-slate-100">
+									加载中...
+								</div>
+							)}
+							<div id="tw-time-display" class="text-xl font-bold tracking-wider text-slate-900 dark:text-slate-100">
+								--:--:--
+							</div>
+						</div>
+					)}
+
+					{/* 分隔符 */}
+					{bothEnabled && <span class="text-slate-300 dark:text-slate-600">|</span>}
+
+					{/* 天气区域 */}
+					{weatherEnabled && (
+						<>
+							<div id="tw-weather-loading" class="flex items-center gap-2">
+								<div class="h-5 w-10 rounded bg-slate-200 animate-pulse dark:bg-slate-600"></div>
+								<div class="h-5 w-16 rounded bg-slate-200 animate-pulse dark:bg-slate-600"></div>
+							</div>
+							<div id="tw-weather-data" class="hidden flex items-center gap-2">
+								<span id="tw-weather-icon" class="text-xl leading-none"></span>
+								<span id="tw-weather-temp" class="text-xl font-bold text-slate-900 dark:text-slate-100"></span>
+								<span id="tw-weather-desc" class="text-xs text-slate-600 dark:text-slate-300"></span>
+								<span id="tw-weather-city" class="text-xs text-slate-400 dark:text-slate-500"></span>
+							</div>
+							<div id="tw-weather-error" class="hidden">
+								<span class="text-xs text-slate-400 dark:text-slate-500">天气获取失败</span>
+							</div>
+						</>
+					)}
+				</div>
+			</div>
+		</section>
+	) : (
+		/* ========== 双卡片模式 ========== */
+		<section class="grid grid-cols-2 gap-4">
+			{/* 时间卡片 */}
+			{timeEnabled && (
+				<div class:list={[
+					"group/card relative overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm",
+					"transition-all duration-300",
+					"hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
+					"dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400",
+					"animate-on-scroll anim-fade-up stagger-1",
+				]}>
+					{showLabels && (
+						<div class:list={["flex items-center gap-2 mb-3", align === "center" ? "justify-center" : align === "right" ? "justify-end" : ""]}>
+							<Icon name="material-symbols:schedule-outline-rounded" size="1.125rem" />
+							<span class="text-xs text-slate-500 dark:text-slate-400">当前时间</span>
+						</div>
+					)}
+					<div class={textAlign}>
+						<div id="tw-time-display" class="text-2xl font-bold tracking-wider text-slate-900 dark:text-slate-100">
+							--:--:--
+						</div>
+						{showDate && (
+							<div id="tw-date-display" class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+								加载中...
+							</div>
+						)}
+					</div>
+				</div>
+			)}
+
+			{/* 天气卡片 */}
+			{weatherEnabled && (
+				<div class:list={[
+					"group/card relative overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm",
+					"transition-all duration-300",
+					"hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
+					"dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400",
+					"animate-on-scroll anim-fade-up stagger-2",
+				]}>
+					{showLabels && (
+						<div class:list={["flex items-center gap-2 mb-3", align === "center" ? "justify-center" : align === "right" ? "justify-end" : ""]}>
+							<Icon name="material-symbols:cloud-outline" size="1.125rem" />
+							<span class="text-xs text-slate-500 dark:text-slate-400">天气</span>
+						</div>
+					)}
+					<div class={textAlign}>
+						<div id="tw-weather-loading" class:list={["space-y-2", align === "center" ? "flex flex-col items-center" : align === "right" ? "flex flex-col items-end" : ""]}>
+							<div class="h-8 w-20 rounded bg-slate-200 animate-pulse dark:bg-slate-600"></div>
+							<div class="h-4 w-28 rounded bg-slate-200 animate-pulse dark:bg-slate-600"></div>
+						</div>
+						<div id="tw-weather-data" class="hidden">
+							<div class:list={["flex items-baseline gap-2", align === "center" ? "justify-center" : align === "right" ? "justify-end" : ""]}>
+								<span id="tw-weather-icon" class="text-2xl leading-none"></span>
+								<span id="tw-weather-temp" class="text-2xl font-bold text-slate-900 dark:text-slate-100"></span>
+							</div>
+							<div class:list={["mt-1 flex items-center gap-1.5", align === "center" ? "justify-center" : align === "right" ? "justify-end" : ""]}>
+								<span id="tw-weather-desc" class="text-xs text-slate-600 dark:text-slate-300"></span>
+								<span id="tw-weather-city" class="text-xs text-slate-400 dark:text-slate-500"></span>
+							</div>
+						</div>
+						<div id="tw-weather-error" class="hidden">
+							<span class="text-xs text-slate-400 dark:text-slate-500">天气获取失败</span>
+						</div>
+					</div>
+				</div>
+			)}
+		</section>
+	)
+)}
+
+{(isEnabled && (timeEnabled || weatherEnabled)) && (
+	<script is:inline define:vars={{ timeEnabled, weatherEnabled, showSeconds, showDate, timeFormat, weatherCity, cityCode, weatherLocation, apiSource, apiKey, privateKey, isZh }}>
+		(function () {
+			// ========== 时间显示 ==========
+			if (timeEnabled) {
+				var timeEl = document.getElementById("tw-time-display");
+				var dateEl = document.getElementById("tw-date-display");
+
+				var weekDays = isZh
+					? ["日", "一", "二", "三", "四", "五", "六"]
+					: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+				function updateTime() {
+					if (!timeEl) return;
+					var now = new Date();
+					var hours = now.getHours();
+					var minutes = now.getMinutes();
+					var seconds = now.getSeconds();
+
+					var timeStr;
+					if (timeFormat === "12") {
+						var period = hours >= 12 ? "PM" : "AM";
+						var displayHours = hours % 12 || 12;
+						timeStr = String(displayHours).padStart(2, "0") + ":" + String(minutes).padStart(2, "0");
+						if (showSeconds) {
+							timeStr += ":" + String(seconds).padStart(2, "0") + " " + period;
+						} else {
+							timeStr += " " + period;
+						}
+					} else {
+						timeStr = String(hours).padStart(2, "0") + ":" + String(minutes).padStart(2, "0");
+						if (showSeconds) {
+							timeStr += ":" + String(seconds).padStart(2, "0");
+						}
+					}
+					timeEl.textContent = timeStr;
+
+					if (showDate && dateEl) {
+						var dateStr;
+						if (isZh) {
+							dateStr = now.getFullYear() + "年" +
+								String(now.getMonth() + 1).padStart(2, "0") + "月" +
+								String(now.getDate()).padStart(2, "0") + "日 " +
+								"星期" + weekDays[now.getDay()];
+						} else {
+							var enMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+							dateStr = weekDays[now.getDay()] + ", " +
+								enMonths[now.getMonth()] + " " +
+								now.getDate() + ", " +
+								now.getFullYear();
+						}
+						dateEl.textContent = dateStr;
+					}
+				}
+
+				updateTime();
+				setInterval(updateTime, 1000);
+			}
+
+			// ========== 天气显示 ==========
+			if (weatherEnabled) {
+				var loadingEl = document.getElementById("tw-weather-loading");
+				var dataEl = document.getElementById("tw-weather-data");
+				var errorEl = document.getElementById("tw-weather-error");
+				var iconEl = document.getElementById("tw-weather-icon");
+				var tempEl = document.getElementById("tw-weather-temp");
+				var descEl = document.getElementById("tw-weather-desc");
+				var cityEl = document.getElementById("tw-weather-city");
+
+				var wttrCodeMap = {
+					"113": { zh: "晴", en: "Sunny" },
+					"116": { zh: "多云", en: "Partly cloudy" },
+					"119": { zh: "阴", en: "Cloudy" },
+					"122": { zh: "阴天", en: "Overcast" },
+					"143": { zh: "雾", en: "Mist" },
+					"176": { zh: "小阵雨", en: "Patchy rain possible" },
+					"179": { zh: "小阵雪", en: "Patchy snow possible" },
+					"182": { zh: "雨夹雪", en: "Patchy sleet possible" },
+					"185": { zh: "冻雨", en: "Patchy freezing drizzle" },
+					"200": { zh: "雷阵雨", en: "Thundery outbreaks" },
+					"227": { zh: "吹雪", en: "Blowing snow" },
+					"230": { zh: "暴风雪", en: "Blizzard" },
+					"248": { zh: "雾", en: "Fog" },
+					"260": { zh: "冻雾", en: "Freezing fog" },
+					"263": { zh: "毛毛雨", en: "Light drizzle" },
+					"266": { zh: "小雨", en: "Light rain" },
+					"281": { zh: "冻毛毛雨", en: "Light freezing drizzle" },
+					"284": { zh: "冻雨", en: "Moderate freezing rain" },
+					"293": { zh: "局部小雨", en: "Patchy light rain" },
+					"296": { zh: "小雨", en: "Light rain" },
+					"299": { zh: "中雨", en: "Moderate rain" },
+					"302": { zh: "大雨", en: "Heavy rain" },
+					"305": { zh: "间歇性大雨", en: "Heavy rain at times" },
+					"308": { zh: "暴雨", en: "Torrential rain" },
+					"311": { zh: "冻雨", en: "Freezing rain" },
+					"314": { zh: "大冻雨", en: "Heavy freezing rain" },
+					"317": { zh: "雨夹雪", en: "Sleet" },
+					"320": { zh: "小雪", en: "Light snow" },
+					"323": { zh: "局部小雪", en: "Patchy light snow" },
+					"326": { zh: "小雪", en: "Light snow" },
+					"329": { zh: "局部中雪", en: "Patchy moderate snow" },
+					"332": { zh: "中雪", en: "Moderate snow" },
+					"335": { zh: "间歇性大雪", en: "Patchy heavy snow" },
+					"338": { zh: "大雪", en: "Heavy snow" },
+					"350": { zh: "冰粒", en: "Ice pellets" },
+					"353": { zh: "阵雨", en: "Light rain shower" },
+					"356": { zh: "中到大阵雨", en: "Moderate or heavy rain shower" },
+					"359": { zh: "暴雨", en: "Torrential rain shower" },
+					"362": { zh: "小阵雨夹雪", en: "Light sleet showers" },
+					"365": { zh: "中到大阵雨夹雪", en: "Moderate or heavy sleet showers" },
+					"368": { zh: "小阵雪", en: "Light snow showers" },
+					"371": { zh: "中到大阵雪", en: "Moderate or heavy snow showers" },
+					"374": { zh: "小冰粒", en: "Light ice pellet showers" },
+					"377": { zh: "中到大冰粒", en: "Moderate or heavy ice pellet showers" },
+					"386": { zh: "雷阵雨", en: "Patchy light rain with thunder" },
+					"389": { zh: "雷暴大雨", en: "Moderate or heavy rain with thunder" },
+					"392": { zh: "雷阵雪", en: "Patchy light snow with thunder" },
+					"395": { zh: "雷暴大雪", en: "Moderate or heavy snow with thunder" }
+				};
+
+				var caiyunSkyconMap = {
+					CLEAR_DAY: { zh: "晴", en: "Clear" },
+					CLEAR_NIGHT: { zh: "晴", en: "Clear" },
+					PARTLY_CLOUDY_DAY: { zh: "多云", en: "Partly cloudy" },
+					PARTLY_CLOUDY_NIGHT: { zh: "多云", en: "Partly cloudy" },
+					CLOUDY: { zh: "阴", en: "Cloudy" },
+					FOG: { zh: "雾", en: "Fog" },
+					LIGHT_HAZE: { zh: "轻度雾霾", en: "Light haze" },
+					MODERATE_HAZE: { zh: "中度雾霾", en: "Moderate haze" },
+					HEAVY_HAZE: { zh: "重度雾霾", en: "Heavy haze" },
+					LIGHT_RAIN: { zh: "小雨", en: "Light rain" },
+					MODERATE_RAIN: { zh: "中雨", en: "Moderate rain" },
+					HEAVY_RAIN: { zh: "大雨", en: "Heavy rain" },
+					STORM_RAIN: { zh: "暴雨", en: "Storm" },
+					LIGHT_SNOW: { zh: "小雪", en: "Light snow" },
+					MODERATE_SNOW: { zh: "中雪", en: "Moderate snow" },
+					HEAVY_SNOW: { zh: "大雪", en: "Heavy snow" },
+					STORM_SNOW: { zh: "暴雪", en: "Storm snow" },
+					WIND: { zh: "大风", en: "Windy" }
+				};
+
+				function showState(state) {
+					if (loadingEl) loadingEl.classList.toggle("hidden", state !== "loading");
+					if (dataEl) dataEl.classList.toggle("hidden", state !== "data");
+					if (errorEl) errorEl.classList.toggle("hidden", state !== "error");
+				}
+
+				function displayWeather(temp, desc, city, emoji) {
+					if (tempEl) tempEl.textContent = temp + "°C";
+					if (descEl) descEl.textContent = desc;
+					if (cityEl) cityEl.textContent = city;
+					if (iconEl) iconEl.textContent = emoji;
+					showState("data");
+				}
+
+				function descToEmoji(desc) {
+					var d = desc.toLowerCase();
+					if (d.indexOf("thunder") !== -1 || d.indexOf("雷") !== -1) return "⛈️";
+					if (d.indexOf("snow") !== -1 || d.indexOf("雪") !== -1) return "🌨️";
+					if (d.indexOf("rain") !== -1 || d.indexOf("雨") !== -1) return "🌧️";
+					if (d.indexOf("drizzle") !== -1 || d.indexOf("毛毛") !== -1) return "🌦️";
+					if (d.indexOf("fog") !== -1 || d.indexOf("mist") !== -1 || d.indexOf("smoke") !== -1 || d.indexOf("haze") !== -1 || d.indexOf("雾") !== -1 || d.indexOf("烟") !== -1 || d.indexOf("霾") !== -1) return "🌫️";
+					if (d.indexOf("cloud") !== -1 || d.indexOf("overcast") !== -1 || d.indexOf("阴") !== -1 || d.indexOf("云") !== -1) return "☁️";
+					if (d.indexOf("partly") !== -1 || d.indexOf("多云") !== -1) return "⛅";
+					if (d.indexOf("clear") !== -1 || d.indexOf("sunny") !== -1 || d.indexOf("晴") !== -1) return "☀️";
+					return "🌤️";
+				}
+
+				function fetchWttr() {
+					var weatherPromise = fetch("https://wttr.in/" + (weatherCity ? encodeURIComponent(weatherCity) : "") + "?format=j1").then(function (r) {
+						if (!r.ok) throw new Error("HTTP " + r.status);
+						return r.json();
+					});
+					var cityPromise = weatherCity
+						? Promise.resolve(weatherCity)
+						: fetch("https://ipapi.co/json/").then(function (r) { return r.json(); }).then(function (ip) { return ip.city || ""; }).catch(function () { return ""; });
+					return Promise.all([weatherPromise, cityPromise]).then(function (results) {
+						var data = results[0], city = results[1];
+						var current = data.current_condition && data.current_condition[0];
+						if (!current) throw new Error("No data");
+						var temp = current.temp_C;
+						var entry = wttrCodeMap[String(current.weatherCode)];
+						var desc = entry ? (isZh ? entry.zh : entry.en) : (current.weatherDesc && current.weatherDesc[0] && current.weatherDesc[0].value || "");
+						displayWeather(temp, desc, city, descToEmoji(desc));
+					});
+				}
+
+				function fetchWeatherAPI() {
+					var q = weatherCity || "auto:ip";
+					var url = "https://api.weatherapi.com/v1/current.json?key=" + encodeURIComponent(apiKey) + "&q=" + encodeURIComponent(q) + "&lang=" + (isZh ? "zh" : "en");
+					return fetch(url).then(function (r) {
+						if (!r.ok) throw new Error("HTTP " + r.status);
+						return r.json();
+					}).then(function (data) {
+						if (!data.current || !data.location) throw new Error("No data");
+						displayWeather(Math.round(data.current.temp_c), data.current.condition.text || "", data.location.name || "", descToEmoji(data.current.condition.text || ""));
+					});
+				}
+
+				function base64url(str) {
+					return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+				}
+
+				function generateQWeatherJWT() {
+					var header = base64url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+					var now = Math.floor(Date.now() / 1000);
+					var payload = base64url(JSON.stringify({ sub: apiKey, iat: now, exp: now + 900 }));
+					var data = header + "." + payload;
+					var enc = new TextEncoder();
+					return crypto.subtle.importKey("raw", enc.encode(privateKey), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]).then(function (key) {
+						return crypto.subtle.sign("HMAC", key, enc.encode(data));
+					}).then(function (sig) {
+						var arr = new Uint8Array(sig), str = "";
+						for (var i = 0; i < arr.length; i++) str += String.fromCharCode(arr[i]);
+						return data + "." + base64url(str);
+					});
+				}
+
+				function fetchQWeather() {
+					if (!apiKey || !privateKey) throw new Error("No key");
+					return generateQWeatherJWT().then(function (token) {
+						var url = "https://devapi.qweather.com/v7/weather/now?lang=" + (isZh ? "zh" : "en");
+						if (weatherCity) url += "&location=" + encodeURIComponent(weatherCity);
+						return fetch(url, { headers: { "Authorization": "Bearer " + token } });
+					}).then(function (r) {
+						if (!r.ok) throw new Error("HTTP " + r.status);
+						return r.json();
+					}).then(function (data) {
+						if (data.code !== "200" || !data.now) throw new Error("API error");
+						displayWeather(data.now.temp, data.now.text || "", weatherCity || "", descToEmoji(data.now.text || ""));
+					});
+				}
+
+				function fetchAmap() {
+					if (!cityCode) throw new Error("No cityCode");
+					var url = "https://restapi.amap.com/v3/weather/weatherInfo?key=" + encodeURIComponent(apiKey) + "&city=" + encodeURIComponent(cityCode) + "&extensions=base&output=JSON";
+					return fetch(url).then(function (r) {
+						if (!r.ok) throw new Error("HTTP " + r.status);
+						return r.json();
+					}).then(function (data) {
+						if (data.status !== "1" || !data.lives || !data.lives.length) throw new Error("API error");
+						var live = data.lives[0];
+						displayWeather(live.temperature, live.weather || "", live.city || "", descToEmoji(live.weather || ""));
+					});
+				}
+
+				function caiyunSkyconToEmoji(skycon) {
+					if (!skycon) return "🌤️";
+					if (skycon.indexOf("THUNDER") !== -1) return "⛈️";
+					if (skycon.indexOf("SNOW") !== -1) return "🌨️";
+					if (skycon.indexOf("RAIN") !== -1) return "🌧️";
+					if (skycon.indexOf("HAZE") !== -1 || skycon.indexOf("FOG") !== -1) return "🌫️";
+					if (skycon.indexOf("CLOUDY") !== -1) return "☁️";
+					if (skycon.indexOf("PARTLY") !== -1) return "⛅";
+					if (skycon.indexOf("CLEAR") !== -1) return "☀️";
+					if (skycon.indexOf("WIND") !== -1) return "💨";
+					return "🌤️";
+				}
+
+				function fetchCaiyun() {
+					if (!weatherLocation) throw new Error("No location");
+					var url = "https://api.caiyunapp.com/v2.6/" + encodeURIComponent(apiKey) + "/" + weatherLocation + "/realtime";
+					return fetch(url).then(function (r) {
+						if (!r.ok) throw new Error("HTTP " + r.status);
+						return r.json();
+					}).then(function (data) {
+						if (data.status !== "ok" || !data.result || !data.result.realtime) throw new Error("API error");
+						var rt = data.result.realtime;
+						var skycon = rt.skycon || "";
+						var entry = caiyunSkyconMap[skycon];
+						var desc = entry ? (isZh ? entry.zh : entry.en) : skycon;
+						displayWeather(Math.round(rt.temperature), desc, "", caiyunSkyconToEmoji(skycon));
+					});
+				}
+
+				function fetchWeather() {
+					showState("loading");
+					var fetchFn;
+					switch (apiSource) {
+						case "weatherapi":
+							if (!apiKey) { showState("error"); return; }
+							fetchFn = fetchWeatherAPI; break;
+						case "qweather":
+							if (!apiKey || !privateKey) { showState("error"); return; }
+							fetchFn = fetchQWeather; break;
+						case "amap":
+							if (!apiKey || !cityCode) { showState("error"); return; }
+							fetchFn = fetchAmap; break;
+						case "caiyun":
+							if (!apiKey || !weatherLocation) { showState("error"); return; }
+							fetchFn = fetchCaiyun; break;
+						default:
+							fetchFn = fetchWttr; break;
+					}
+					fetchFn().catch(function () { showState("error"); });
+				}
+
+				fetchWeather();
+			}
+		})();
+	</script>
+)}
