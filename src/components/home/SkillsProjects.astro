@@ -112,7 +112,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 		<div id="skill-content" class="tab-content min-h-[200px]">
 			<ul class={`relative grid gap-x-6 gap-y-3 ${skillColumns >= 4 ? 'md:grid-cols-2 lg:grid-cols-4' : skillColumns >= 3 ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}>
 				{validSkills.map((skill, index) => (
-					<li class:list={["skill-item flex flex-col gap-1.5 animate-on-scroll anim-progress", `stagger-${Math.min(index + 1, 8)}`]}>
+					<li class:list={["skill-item flex flex-col gap-1.5 rounded-lg px-2 py-1.5 -mx-2 -my-1.5 transition-all duration-300 hover:scale-105 hover:bg-slate-50 dark:hover:bg-slate-700/30 cursor-default animate-on-scroll anim-progress", `stagger-${Math.min(index + 1, 8)}`]}>
 						<div class="flex justify-between">
 							<label class="text-xs font-medium text-slate-700 dark:text-slate-300">
 								{skill.name}
@@ -328,7 +328,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 		<div class="min-h-[200px]">
 			<ul class={`relative grid gap-x-6 gap-y-3 ${skillColumns >= 4 ? 'md:grid-cols-2 lg:grid-cols-4' : skillColumns >= 3 ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}>
 				{validSkills.map((skill, index) => (
-					<li class:list={["skill-item flex flex-col gap-1.5 animate-on-scroll anim-progress", `stagger-${Math.min(index + 1, 8)}`]}>
+					<li class:list={["skill-item flex flex-col gap-1.5 rounded-lg px-2 py-1.5 -mx-2 -my-1.5 transition-all duration-300 hover:scale-105 hover:bg-slate-50 dark:hover:bg-slate-700/30 cursor-default animate-on-scroll anim-progress", `stagger-${Math.min(index + 1, 8)}`]}>
 						<div class="flex justify-between">
 							<label class="text-xs font-medium text-slate-700 dark:text-slate-300">
 								{skill.name}
