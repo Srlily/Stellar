@@ -43,4 +43,8 @@ export const backgroundConfig: BackgroundConfig = {
 		blur: 10, // 背景模糊度（像素）
 		cardOpacity: 0.5, // 卡片透明度，0-1
 	},
+
+	// 背景加载动画效果
+	// 可选值："shimmer" 流光扫描 | "pulse" 呼吸脉冲 | "wave" 波纹扩散 | "none" 无动画
+	loadingEffect: "shimmer",
 };

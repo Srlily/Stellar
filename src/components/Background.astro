@@ -1,7 +1,9 @@
 ---
 import { backgroundConfig } from "@/config/backgroundConfig";
+import type { BackgroundLoadingEffect } from "@/types/config";
 
 const { mode, src, overlay, fullscreen } = backgroundConfig;
+const loadingEffect: BackgroundLoadingEffect = backgroundConfig.loadingEffect ?? "shimmer";
 
 // 处理图片数组，获取随机图片
 function getRandomImage(images: string | string[]): string {
@@ -43,7 +45,9 @@ const fullscreenPosition = fullscreen.position ?? "center";
 		id="background-wallpaper"
 		class="background-wallpaper"
 		style={`--bg-position: ${fullscreenPosition};`}
+		data-effect={loadingEffect}
 	>
+		{loadingEffect !== "none" && <div class="background-loader"></div>}
 		<img
 			src={desktopImage}
 			alt=""
@@ -64,7 +68,9 @@ const fullscreenPosition = fullscreen.position ?? "center";
 	<div
 		id="background-wallpaper"
 		class="background-wallpaper"
+		data-effect={loadingEffect}
 	>
+		{loadingEffect !== "none" && <div class="background-loader"></div>}
 		<div
 			class="background-overlay desktop-only"
 			style={`background-image: url('${desktopImage}');`}
@@ -77,13 +83,43 @@ const fullscreenPosition = fullscreen.position ?? "center";
 	</div>
 )}
 
-<script is:inline define:vars={{ mode }}>
+<script is:inline define:vars={{ mode, desktopImage, mobileImage }}>
 	// 设置背景模式标记
 	document.documentElement.dataset.background = mode;
+
+	(function () {
+		var wallpaper = document.getElementById('background-wallpaper');
+		if (!wallpaper) return;
+
+		function onReady() {
+			wallpaper.classList.add('bg-loaded');
+		}
+
+		if (mode === 'fullscreen') {
+			var isMobile = window.innerWidth <= 768;
+			var img = wallpaper.querySelector(isMobile ? '.mobile-only' : '.desktop-only');
+			if (img && img.complete) {
+				onReady();
+			} else if (img) {
+				img.addEventListener('load', onReady);
+				img.addEventListener('error', onReady);
+			} else {
+				onReady();
+			}
+		} else {
+			var url = window.innerWidth <= 768 ? mobileImage : desktopImage;
+			if (!url) { onReady(); return; }
+			var preloader = new Image();
+			preloader.onload = onReady;
+			preloader.onerror = onReady;
+			preloader.src = url;
+			if (preloader.complete) onReady();
+		}
+	})();
 </script>
 
-<style>
-	/* 背景壁纸基础样式 */
+<style is:global>
+	/* ========== 基础样式 ========== */
 	.background-wallpaper {
 		position: fixed;
 		inset: 0;
@@ -91,7 +127,117 @@ const fullscreenPosition = fullscreen.position ?? "center";
 		pointer-events: none;
 	}
 
-	/* 全屏壁纸模式 */
+	.background-loader {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		transition: opacity 0.6s ease;
+	}
+
+	/* 图片/遮罩层加载前隐藏 */
+	.background-wallpaper .background-img,
+	.background-wallpaper .background-overlay,
+	.background-wallpaper .background-mask {
+		opacity: 0;
+		transition: opacity 0.6s ease;
+	}
+
+	/* 加载完成后淡入 */
+	.background-wallpaper.bg-loaded .background-img,
+	.background-wallpaper.bg-loaded .background-overlay,
+	.background-wallpaper.bg-loaded .background-mask {
+		opacity: 1;
+	}
+
+	/* 加载完成后移除加载动画 */
+	.background-wallpaper.bg-loaded .background-loader {
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	/* ========== shimmer 流光扫描 ========== */
+	[data-effect="shimmer"] .background-loader {
+		background: linear-gradient(
+			110deg,
+			#e2e8f0 30%,
+			#f1f5f9 50%,
+			#e2e8f0 70%
+		);
+		background-size: 200% 100%;
+		animation: shimmer 1.8s ease-in-out infinite;
+	}
+	html.dark [data-effect="shimmer"] .background-loader {
+		background: linear-gradient(
+			110deg,
+			#1e293b 30%,
+			#334155 50%,
+			#1e293b 70%
+		);
+		background-size: 200% 100%;
+	}
+
+	@keyframes shimmer {
+		0% { background-position: 200% 0; }
+		100% { background-position: -200% 0; }
+	}
+
+	/* ========== pulse 呼吸脉冲 ========== */
+	[data-effect="pulse"] .background-loader {
+		background-color: #e2e8f0;
+		animation: pulse-bg 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+	}
+	html.dark [data-effect="pulse"] .background-loader {
+		background-color: #1e293b;
+	}
+
+	@keyframes pulse-bg {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.4; }
+	}
+
+	/* ========== wave 波纹扩散 ========== */
+	[data-effect="wave"] .background-loader {
+		background-color: #e2e8f0;
+		overflow: hidden;
+	}
+	html.dark [data-effect="wave"] .background-loader {
+		background-color: #1e293b;
+	}
+	[data-effect="wave"] .background-loader::before,
+	[data-effect="wave"] .background-loader::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: 50%;
+		animation: wave-ring 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+	}
+	[data-effect="wave"] .background-loader::before {
+		background: radial-gradient(circle, rgba(148,163,184,0.35) 0%, transparent 70%);
+		animation-delay: 0s;
+	}
+	[data-effect="wave"] .background-loader::after {
+		background: radial-gradient(circle, rgba(148,163,184,0.2) 0%, transparent 70%);
+		animation-delay: 0.8s;
+	}
+	html.dark [data-effect="wave"] .background-loader::before {
+		background: radial-gradient(circle, rgba(71,85,105,0.5) 0%, transparent 70%);
+	}
+	html.dark [data-effect="wave"] .background-loader::after {
+		background: radial-gradient(circle, rgba(71,85,105,0.3) 0%, transparent 70%);
+	}
+
+	@keyframes wave-ring {
+		0% {
+			transform: scale(0);
+			opacity: 1;
+		}
+		100% {
+			transform: scale(3);
+			opacity: 0;
+		}
+	}
+
+	/* ========== 壁纸模式 ========== */
 	.background-img {
 		position: absolute;
 		width: 100%;
