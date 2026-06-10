@@ -141,13 +141,13 @@ const hasMore = modalCards.length > 0;
 		<section class:list={["grid gap-4", className]}>
 			{/* 主区域卡片 */}
 			<div class="nav-cards-grid grid gap-4" style={`--nav-cols: ${columns};`}>
-				{visibleCards.map((card) => (
-					<div class="card-item">
+				{visibleCards.map((card, index) => (
+					<div class:list={["card-item animate-on-scroll anim-fade-up", `stagger-${Math.min(index + 1, 8)}`]}>
 						<a
 							href={card.url}
 							target={card.url.startsWith("/") ? "_self" : "_blank"}
 							rel={card.url.startsWith("/") ? "" : "noopener noreferrer"}
-							class="group/card relative flex items-center gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm transition-all duration-300 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400"
+							class="group/card relative flex items-center gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400"
 						>
 							{/* 图标/图片区域 */}
 							<div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-700">
@@ -217,10 +217,10 @@ const hasMore = modalCards.length > 0;
 
 				{/* 更多按钮 */}
 				{hasMore && (
-					<div class="card-item">
+					<div class:list={["card-item animate-on-scroll anim-fade-up", `stagger-${Math.min(visibleCards.length + 1, 8)}`]}>
 						<button
 							type="button"
-							class="group/card relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm transition-all duration-300 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400 cursor-pointer"
+							class="group/card relative flex w-full items-center gap-3 overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400 cursor-pointer"
 							id="nav-cards-more-btn"
 							aria-label={`查看更多 ${modalCards.length} 个链接`}
 						>
@@ -245,10 +245,10 @@ const hasMore = modalCards.length > 0;
 		{hasMore && (
 			<div
 				id="nav-cards-modal"
-				class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+				class="modal-backdrop fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
 				aria-hidden="true"
 			>
-				<div class="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+				<div class="modal-content max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800">
 					{/* 弹窗头部 */}
 					<div class="mb-4 flex items-center justify-between">
 						<h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
@@ -271,7 +271,7 @@ const hasMore = modalCards.length > 0;
 								href={card.url}
 								target={card.url.startsWith("/") ? "_self" : "_blank"}
 								rel={card.url.startsWith("/") ? "" : "noopener noreferrer"}
-								class="group/card relative flex items-center gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3 transition-all duration-200 hover:border-primary-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400"
+								class="group/card relative flex items-center gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3 transition-all duration-200 hover:scale-105 hover:border-primary-400 hover:shadow-md dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400"
 							>
 								<div class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
 									{hasValidImage(card) ? (
@@ -350,14 +350,23 @@ const hasMore = modalCards.length > 0;
 						modal.setAttribute('aria-hidden', 'false');
 						document.body.style.overflow = 'hidden';
 						closeBtn.focus();
+						requestAnimationFrame(function() {
+							modal.classList.add('is-open');
+							modal.querySelector('.modal-content').classList.add('is-open');
+						});
 					}
 
 					function closeModal() {
-						modal.classList.add('hidden');
-						modal.classList.remove('flex');
-						modal.setAttribute('aria-hidden', 'true');
-						document.body.style.overflow = '';
-						moreBtn.focus();
+						modal.classList.remove('is-open');
+						var content = modal.querySelector('.modal-content');
+						if (content) content.classList.remove('is-open');
+						setTimeout(function() {
+							modal.classList.add('hidden');
+							modal.classList.remove('flex');
+							modal.setAttribute('aria-hidden', 'true');
+							document.body.style.overflow = '';
+							moreBtn.focus();
+						}, 250);
 					}
 
 					moreBtn.addEventListener('click', openModal);

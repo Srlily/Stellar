@@ -83,7 +83,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 ---
 
 {showTabs && (
-	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80", className]}>
+	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80 animate-on-scroll anim-fade-up stagger-5", className]}>
 		{/* 选项卡标题 */}
 		<div class="tabs-container relative mb-6 flex rounded-lg bg-slate-100 p-1 dark:bg-slate-700/50">
 			{/* 滑动指示器 */}
@@ -111,8 +111,8 @@ const projectGridClass = getProjectGridClass(projectColumns);
 		{/* 技能内容 */}
 		<div id="skill-content" class="tab-content min-h-[200px]">
 			<ul class={`relative grid gap-x-6 gap-y-3 ${skillColumns >= 4 ? 'md:grid-cols-2 lg:grid-cols-4' : skillColumns >= 3 ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}>
-				{validSkills.map((skill) => (
-					<li class="skill-item flex flex-col gap-1.5">
+				{validSkills.map((skill, index) => (
+					<li class:list={["skill-item flex flex-col gap-1.5 animate-on-scroll anim-progress", `stagger-${Math.min(index + 1, 8)}`]}>
 						<div class="flex justify-between">
 							<label class="text-xs font-medium text-slate-700 dark:text-slate-300">
 								{skill.name}
@@ -123,7 +123,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 						</div>
 						<div class="relative h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-600">
 							<div
-								class="absolute h-full rounded-full"
+								class="progress-bar-fill absolute h-full rounded-full"
 								style={`${progressStyle} width: ${skill.level || 0}%;`}
 							></div>
 						</div>
@@ -135,12 +135,16 @@ const projectGridClass = getProjectGridClass(projectColumns);
 		{/* 项目内容 */}
 		<div id="project-content" class="tab-content hidden min-h-[200px]">
 			<div class={`grid ${projectGridClass} gap-x-6 gap-y-3`}>
-				{visibleProjects.map((project) => (
+				{visibleProjects.map((project, index) => (
 					<a
 						href={project.url}
 						target={project.url.startsWith("/") ? "_self" : "_blank"}
 						rel={project.url.startsWith("/") ? "" : "noopener noreferrer"}
-						class="group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400"
+						class:list={[
+							"group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400",
+							"animate-on-scroll anim-fade-up",
+							`stagger-${Math.min(index + 1, 8)}`,
+						]}
 					>
 						{/* 项目图片或图标 */}
 						<div class="relative h-16 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
@@ -192,7 +196,11 @@ const projectGridClass = getProjectGridClass(projectColumns);
 				{projectHasMore && (
 					<button
 						type="button"
-						class="group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400 cursor-pointer"
+						class:list={[
+							"group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400 cursor-pointer",
+							"animate-on-scroll anim-fade-up",
+							`stagger-${Math.min(visibleProjects.length + 1, 8)}`,
+						]}
 						id="project-modal-open"
 					>
 						<div class="relative h-16 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
@@ -246,8 +254,22 @@ const projectGridClass = getProjectGridClass(projectColumns);
 						skillTab.querySelector('svg').style.color = inactiveColor;
 						skillContent.classList.add('hidden');
 						projectContent.classList.remove('hidden');
-						// 切换到项目选项卡时派发事件
-						document.dispatchEvent(new CustomEvent('check-tag-overflow'));
+						// 切换到项目选项卡时触发动画观察和标签溢出检测
+						requestAnimationFrame(function() {
+							var els = projectContent.querySelectorAll('.animate-on-scroll:not(.is-visible)');
+							if (els.length) {
+								var obs = new IntersectionObserver(function(entries) {
+									entries.forEach(function(e) {
+										if (e.isIntersecting) {
+											e.target.classList.add('is-visible');
+											obs.unobserve(e.target);
+										}
+									});
+								}, { threshold: 0.1 });
+								els.forEach(function(el) { obs.observe(el); });
+							}
+							document.dispatchEvent(new CustomEvent('check-tag-overflow'));
+						});
 					}
 				}
 
@@ -293,7 +315,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 )}
 
 {onlySkills && (
-	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80", className]}>
+	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80 animate-on-scroll anim-fade-up stagger-5", className]}>
 		{/* 头部 */}
 		<div class="mb-6 flex items-center gap-2">
 			<Icon name="material-symbols:build-outline-rounded" size={`${iconSize}px`} class="text-primary-500" />
@@ -305,8 +327,8 @@ const projectGridClass = getProjectGridClass(projectColumns);
 		{/* 技能列表 */}
 		<div class="min-h-[200px]">
 			<ul class={`relative grid gap-x-6 gap-y-3 ${skillColumns >= 4 ? 'md:grid-cols-2 lg:grid-cols-4' : skillColumns >= 3 ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}>
-				{validSkills.map((skill) => (
-					<li class="skill-item flex flex-col gap-1.5">
+				{validSkills.map((skill, index) => (
+					<li class:list={["skill-item flex flex-col gap-1.5 animate-on-scroll anim-progress", `stagger-${Math.min(index + 1, 8)}`]}>
 						<div class="flex justify-between">
 							<label class="text-xs font-medium text-slate-700 dark:text-slate-300">
 								{skill.name}
@@ -317,7 +339,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 						</div>
 						<div class="relative h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-600">
 							<div
-								class="absolute h-full rounded-full"
+								class="progress-bar-fill absolute h-full rounded-full"
 								style={`${progressStyle} width: ${skill.level || 0}%;`}
 							></div>
 						</div>
@@ -329,7 +351,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 )}
 
 {onlyProjects && (
-	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80", className]}>
+	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80 animate-on-scroll anim-fade-up stagger-5", className]}>
 		{/* 头部 */}
 		<div class="mb-6 flex items-center gap-2">
 			<Icon name="material-symbols:folder-outline-rounded" size={`${projectIconSize}px`} class="text-primary-500" />
@@ -341,12 +363,16 @@ const projectGridClass = getProjectGridClass(projectColumns);
 		{/* 项目列表 */}
 		<div class="min-h-[200px]">
 			<div class={`grid ${projectGridClass} gap-x-6 gap-y-3`}>
-				{visibleProjects.map((project) => (
+				{visibleProjects.map((project, index) => (
 					<a
 						href={project.url}
 						target={project.url.startsWith("/") ? "_self" : "_blank"}
 						rel={project.url.startsWith("/") ? "" : "noopener noreferrer"}
-						class="group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400"
+						class:list={[
+							"group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400",
+							"animate-on-scroll anim-fade-up",
+							`stagger-${Math.min(index + 1, 8)}`,
+						]}
 					>
 						{/* 项目图片或图标 */}
 						<div class="relative h-20 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
@@ -398,7 +424,11 @@ const projectGridClass = getProjectGridClass(projectColumns);
 				{projectHasMore && (
 					<button
 						type="button"
-						class="group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400 cursor-pointer"
+						class:list={[
+							"group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400 cursor-pointer",
+							"animate-on-scroll anim-fade-up",
+							`stagger-${Math.min(visibleProjects.length + 1, 8)}`,
+						]}
 						id="project-modal-open"
 					>
 						<div class="relative h-20 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
@@ -421,10 +451,10 @@ const projectGridClass = getProjectGridClass(projectColumns);
 {projectHasMore && (
 	<div
 		id="project-modal"
-		class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+		class="modal-backdrop fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
 		aria-hidden="true"
 	>
-		<div class="max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+		<div class="modal-content max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800">
 			<div class="mb-4 flex items-center justify-between">
 				<h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">更多项目</h2>
 				<button
@@ -441,7 +471,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 						href={project.url}
 						target={project.url.startsWith("/") ? "_self" : "_blank"}
 						rel={project.url.startsWith("/") ? "" : "noopener noreferrer"}
-						class="group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:border-primary-400 hover:shadow-lg dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400"
+						class="group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400"
 					>
 						<div class="flex flex-col gap-1">
 							<h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover/card:text-primary-500 transition-colors">
@@ -481,17 +511,24 @@ const projectGridClass = getProjectGridClass(projectColumns);
 			modal.classList.add('flex');
 			modal.setAttribute('aria-hidden', 'false');
 			document.body.style.overflow = 'hidden';
-			// 弹窗打开后检测标签溢出
 			requestAnimationFrame(function() {
+				modal.classList.add('is-open');
+				var mc = modal.querySelector('.modal-content');
+				if (mc) mc.classList.add('is-open');
 				requestAnimationFrame(handleTagOverflow);
 			});
 		});
 		closeBtn.addEventListener('click', function() {
-			modal.classList.add('hidden');
-			modal.classList.remove('flex');
-			modal.setAttribute('aria-hidden', 'true');
-			document.body.style.overflow = '';
-			moreBtn.focus();
+			modal.classList.remove('is-open');
+			var mc = modal.querySelector('.modal-content');
+			if (mc) mc.classList.remove('is-open');
+			setTimeout(function() {
+				modal.classList.add('hidden');
+				modal.classList.remove('flex');
+				modal.setAttribute('aria-hidden', 'true');
+				document.body.style.overflow = '';
+				moreBtn.focus();
+			}, 250);
 		});
 		modal.addEventListener('click', function(e) {
 			if (e.target === modal) closeBtn.click();

@@ -131,5 +131,35 @@ const defaultTheme: string = (siteConfig.theme as string) || SYSTEM_MODE;
 			<slot />
 		</main>
 		<slot name="footer" />
+		{/* 滚动动画 Intersection Observer */}
+		<script is:inline>
+			(function () {
+				function observeAnimations() {
+					var els = document.querySelectorAll('.animate-on-scroll');
+					if (!els.length) return;
+					var observer = new IntersectionObserver(function (entries) {
+						entries.forEach(function (entry) {
+							if (entry.isIntersecting) {
+								entry.target.classList.add('is-visible');
+								observer.unobserve(entry.target);
+							}
+						});
+					}, { threshold: 0.1 });
+					els.forEach(function (el) {
+						if (!el.classList.contains('is-visible')) {
+							observer.observe(el);
+						}
+					});
+				}
+				if (document.readyState === 'loading') {
+					document.addEventListener('DOMContentLoaded', observeAnimations);
+				} else {
+					observeAnimations();
+				}
+				document.addEventListener('swup:content', function () {
+					setTimeout(observeAnimations, 50);
+				});
+			})();
+		</script>
 	</body>
 </html>
