@@ -34,6 +34,11 @@ export interface OverlayConfig {
 	cardOpacity?: number; // 卡片透明度，0-1
 }
 
+// 背景对齐方式
+// - "center": 左右居中对齐（默认）
+// - "center-center": 左右上下均居中对齐
+export type BackgroundAlign = "center" | "center-center";
+
 // 背景配置
 export interface BackgroundConfig {
 	mode: BackgroundMode;
@@ -41,6 +46,7 @@ export interface BackgroundConfig {
 	fullscreen: FullscreenConfig;
 	overlay: OverlayConfig;
 	loadingEffect?: BackgroundLoadingEffect; // 加载动画效果，默认 "shimmer"
+	align?: BackgroundAlign; // 对齐方式，默认 "center"（左右居中）
 }
 
 // ==================== 主页配置类型 ====================

@@ -146,3 +146,12 @@ html.theme-ready section {
 		color 0.2s ease,
 		border-color 0.2s ease;
 }
+
+/* ========== 背景对齐方式 ========== */
+
+/* 左右上下均居中对齐 */
+main.align-center-center {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}

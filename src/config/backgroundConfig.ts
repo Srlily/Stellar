@@ -4,6 +4,11 @@ export const backgroundConfig: BackgroundConfig = {
 	// 背景模式："fullscreen" 全屏壁纸，"overlay" 全屏透明，"none" 纯色背景无壁纸
 	mode: "fullscreen",
 
+	// 对齐方式
+	// - "center": 左右居中对齐（默认）
+	// - "center-center": 左右上下均居中对齐
+	align: "center",
+
 	/**
 	 * 背景图片配置
 	 * 图片路径支持三种格式：

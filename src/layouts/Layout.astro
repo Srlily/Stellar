@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { LIGHT_MODE, DARK_MODE, SYSTEM_MODE } from '../constants';
 import { siteConfig } from '@/config/siteConfig';
+import { backgroundConfig } from '@/config/backgroundConfig';
 import Background from '@/components/Background.astro';
 
 interface Props {
@@ -16,6 +17,9 @@ const {
 
 // 从 siteConfig 获取默认主题模式，确保类型为字符串
 const defaultTheme: string = (siteConfig.theme as string) || SYSTEM_MODE;
+
+// 获取背景对齐方式
+const align = backgroundConfig.align ?? "center";
 ---
 
 <!doctype html>
@@ -127,7 +131,7 @@ const defaultTheme: string = (siteConfig.theme as string) || SYSTEM_MODE;
 	</head>
 	<body class="flex min-h-screen flex-col bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
 		<Background />
-		<main id="swup" class="flex-1 transition-fade">
+		<main id="swup" class={`flex-1 transition-fade${align === "center-center" ? " align-center-center" : ""}`}>
 			<slot />
 		</main>
 		<slot name="footer" />
