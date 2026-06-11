@@ -1,5 +1,24 @@
 import { LIGHT_MODE, DARK_MODE, SYSTEM_MODE } from "../constants/index";
 
+// ==================== 液态玻璃主题配置类型 ====================
+
+// 液态玻璃折射模式
+// - standard: 标准折射，均匀位移
+// - polar: 极坐标折射，环形扭曲
+// - prominent: 突出折射，中心放大效果
+export type GlassRefractionMode = "standard" | "polar" | "prominent";
+
+// 液态玻璃主题配置
+export interface GlassThemeConfig {
+	enable?: boolean; // 是否启用液态玻璃主题（默认 false）
+	refractionMode?: GlassRefractionMode; // 折射模式，默认 "standard"
+	displacementScale?: number; // 位移强度，0-200，默认 70
+	blurAmount?: number; // 模糊程度，0-1，默认 0.0625
+	saturation?: number; // 饱和度，100-300，默认 140
+	aberrationIntensity?: number; // 色散强度，0-20，默认 2
+	cornerRadius?: number; // 圆角半径，0-999，默认 24
+}
+
 // ==================== 背景配置类型 ====================
 
 // 背景模式类型
@@ -239,6 +258,9 @@ export type SiteConfig = {
 	// - dark: 始终使用暗色模式
 	// - system: 跟随系统主题
 	theme?: typeof LIGHT_MODE | typeof DARK_MODE | typeof SYSTEM_MODE;
+
+	// 液态玻璃主题配置
+	glassTheme?: GlassThemeConfig;
 
 	// 主页布局：vertical（垂直排列）| horizontal（水平排列）
 	homeLayout?: "vertical" | "horizontal";

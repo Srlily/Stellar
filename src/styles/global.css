@@ -155,3 +155,152 @@ main.align-center-center {
 	align-items: center;
 	justify-content: center;
 }
+
+/* ========== 液态玻璃主题 ========== */
+
+/* 液态玻璃 CSS 变量 */
+:root {
+	--glass-blur: 6px;
+	--glass-saturation: 140%;
+	--glass-radius: 24px;
+	--glass-bg-light: rgba(255, 255, 255, 0.15);
+	--glass-bg-dark: rgba(0, 0, 0, 0.15);
+	--glass-border-light: rgba(255, 255, 255, 0.25);
+	--glass-border-dark: rgba(255, 255, 255, 0.12);
+	--glass-shadow-light: 0 8px 32px rgba(0, 0, 0, 0.12);
+	--glass-shadow-dark: 0 8px 32px rgba(0, 0, 0, 0.3);
+	--glass-highlight: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0) 0%,
+		rgba(255, 255, 255, 0.12) 33%,
+		rgba(255, 255, 255, 0.3) 66%,
+		rgba(255, 255, 255, 0) 100%
+	);
+}
+
+/* 液态玻璃主题激活时，仅对卡片容器应用玻璃效果（避免影响内部子元素） */
+/* 导航卡片项 */
+html.glass-theme div.card-item > a,
+html.glass-theme div.card-item > button {
+	background: var(--glass-bg-light) !important;
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation)) !important;
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation)) !important;
+	border-color: var(--glass-border-light) !important;
+	box-shadow: var(--glass-shadow-light) !important;
+	transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* 时间天气卡片（group/card 类标记的实际卡片容器） */
+html.glass-theme div.group\/card.rounded-2xl,
+html.glass-theme a.group\/card.rounded-2xl,
+html.glass-theme button.group\/card.rounded-2xl {
+	background: var(--glass-bg-light) !important;
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation)) !important;
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation)) !important;
+	border-color: var(--glass-border-light) !important;
+	box-shadow: var(--glass-shadow-light) !important;
+	transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* 技能卡片和项目卡片的外层 section 容器 */
+html.glass-theme section.rounded-2xl.border {
+	background: var(--glass-bg-light) !important;
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation)) !important;
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation)) !important;
+	border-color: var(--glass-border-light) !important;
+	box-shadow: var(--glass-shadow-light),
+		0 0 0 0.5px rgba(255, 255, 255, 0.2) inset,
+		0 1px 4px rgba(255, 255, 255, 0.1) inset !important;
+}
+
+/* 暗色模式 */
+html.glass-theme.dark div.card-item > a,
+html.glass-theme.dark div.card-item > button,
+html.glass-theme.dark div.group\/card.rounded-2xl,
+html.glass-theme.dark a.group\/card.rounded-2xl,
+html.glass-theme.dark button.group\/card.rounded-2xl {
+	background: var(--glass-bg-dark) !important;
+	border-color: var(--glass-border-dark) !important;
+	box-shadow: var(--glass-shadow-dark) !important;
+}
+
+html.glass-theme.dark section.rounded-2xl.border {
+	background: var(--glass-bg-dark) !important;
+	border-color: var(--glass-border-dark) !important;
+}
+
+/* 玻璃高光边框效果 */
+html.glass-theme .glass-highlight::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	padding: 1px;
+	background: var(--glass-highlight);
+	-webkit-mask:
+		linear-gradient(#000 0 0) content-box,
+		linear-gradient(#000 0 0);
+	-webkit-mask-composite: xor;
+	mask-composite: exclude;
+	pointer-events: none;
+	opacity: 0.4;
+}
+
+/* 社交链接按钮玻璃效果 */
+html.glass-theme a.inline-flex.rounded-full {
+	background: var(--glass-bg-light) !important;
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation)) !important;
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation)) !important;
+	border-color: var(--glass-border-light) !important;
+	box-shadow: var(--glass-shadow-light),
+		0 0 0 0.5px rgba(255, 255, 255, 0.3) inset,
+		0 1px 3px rgba(255, 255, 255, 0.15) inset !important;
+}
+
+html.glass-theme.dark a.inline-flex.rounded-full {
+	background: var(--glass-bg-dark) !important;
+	border-color: var(--glass-border-dark) !important;
+}
+
+/* 弹窗玻璃效果 */
+html.glass-theme .modal-content {
+	background: rgba(255, 255, 255, 0.7) !important;
+	backdrop-filter: blur(20px) saturate(180%) !important;
+	-webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+	border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+html.glass-theme.dark .modal-content {
+	background: rgba(15, 23, 42, 0.8) !important;
+	border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 玻璃主题下的卡片悬停效果 */
+html.glass-theme div.card-item > a:hover,
+html.glass-theme div.card-item > button:hover,
+html.glass-theme div.group\/card.rounded-2xl:hover,
+html.glass-theme a.group\/card.rounded-2xl:hover,
+html.glass-theme button.group\/card.rounded-2xl:hover {
+	background: rgba(255, 255, 255, 0.25) !important;
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15),
+		0 0 0 0.5px rgba(255, 255, 255, 0.4) inset,
+		0 1px 3px rgba(255, 255, 255, 0.2) inset !important;
+	transform: scale(1.02);
+}
+
+html.glass-theme.dark div.card-item > a:hover,
+html.glass-theme.dark div.card-item > button:hover,
+html.glass-theme.dark div.group\/card.rounded-2xl:hover,
+html.glass-theme.dark a.group\/card.rounded-2xl:hover,
+html.glass-theme.dark button.group\/card.rounded-2xl:hover {
+	background: rgba(0, 0, 0, 0.25) !important;
+}
+
+/* 玻璃主题过渡动画 */
+html.glass-theme *,
+html.glass-theme *::before,
+html.glass-theme *::after {
+	transition-property: background-color, background, border-color, box-shadow, transform, opacity;
+	transition-duration: 0.3s;
+	transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
