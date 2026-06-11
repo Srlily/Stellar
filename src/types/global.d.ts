@@ -22,6 +22,19 @@ declare global {
 			 * @returns 切换后的主题模式
 			 */
 			cycleMode: () => typeof LIGHT_MODE | typeof DARK_MODE | typeof SYSTEM_MODE;
+			/**
+			 * 获取液态玻璃主题是否启用
+			 */
+			getGlassEnabled: () => boolean;
+			/**
+			 * 设置液态玻璃主题启用状态
+			 */
+			setGlassEnabled: (enabled: boolean) => void;
+			/**
+			 * 切换液态玻璃主题
+			 * @returns 切换后的状态
+			 */
+			toggleGlass: () => boolean;
 		};
 	}
 }

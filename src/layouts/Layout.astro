@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import { LIGHT_MODE, DARK_MODE, SYSTEM_MODE } from '../constants';
+import { LIGHT_MODE, DARK_MODE, SYSTEM_MODE, GLASS_THEME_KEY } from '../constants';
 import { siteConfig } from '@/config/siteConfig';
 import { backgroundConfig } from '@/config/backgroundConfig';
 import Background from '@/components/Background.astro';
@@ -18,6 +18,10 @@ const {
 // 从 siteConfig 获取默认主题模式，确保类型为字符串
 const defaultTheme: string = (siteConfig.theme as string) || SYSTEM_MODE;
 
+// 获取液态玻璃主题配置
+const glassTheme = siteConfig.glassTheme;
+const defaultGlassEnabled = glassTheme?.enable ?? false;
+
 // 获取背景对齐方式
 const align = backgroundConfig.align ?? "center";
 ---
@@ -32,7 +36,7 @@ const align = backgroundConfig.align ?? "center";
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
-		<script is:inline define:vars={{ LIGHT_MODE, DARK_MODE, SYSTEM_MODE, defaultTheme }}>
+		<script is:inline define:vars={{ LIGHT_MODE, DARK_MODE, SYSTEM_MODE, defaultTheme, GLASS_THEME_KEY, defaultGlassEnabled }}>
 			// 主题模式：light / dark / system
 			// 存储键名与 siteConfig.theme 字段名保持一致
 			(function () {
@@ -73,8 +77,26 @@ const align = backgroundConfig.align ?? "center";
 					applyThemeClass(theme);
 				}
 
+				// 液态玻璃主题：从 localStorage 读取或使用默认值
+				function getGlassEnabled() {
+					try {
+						const stored = localStorage.getItem(GLASS_THEME_KEY);
+						if (stored !== null) return stored === 'true';
+					} catch (_) {}
+					return defaultGlassEnabled;
+				}
+
+				function applyGlassTheme(enabled) {
+					if (enabled) {
+						document.documentElement.classList.add('glass-theme');
+					} else {
+						document.documentElement.classList.remove('glass-theme');
+					}
+				}
+
 				// 首次加载：立即应用，避免主题闪烁
 				applyMode(getStoredMode());
+				applyGlassTheme(getGlassEnabled());
 				// 通知其他组件初始主题
 				document.dispatchEvent(new CustomEvent("theme-change", { detail: { mode: getStoredMode() } }));
 
@@ -95,7 +117,7 @@ const align = backgroundConfig.align ?? "center";
 					}
 				}
 
-				// 暴露给 DarkModeToggle 使用
+				// 暴露给 DarkModeToggle 和 GlassThemeToggle 使用
 				window.__theme = {
 					getMode: getStoredMode,
 					setMode: function (mode) {
@@ -118,6 +140,25 @@ const align = backgroundConfig.align ?? "center";
 						} catch (_) {}
 						applyMode(next);
 						document.dispatchEvent(new CustomEvent("theme-change", { detail: { mode: next } }));
+						return next;
+					},
+					// 液态玻璃主题方法
+					getGlassEnabled: getGlassEnabled,
+					setGlassEnabled: function (enabled) {
+						try {
+							localStorage.setItem(GLASS_THEME_KEY, String(enabled));
+						} catch (_) {}
+						applyGlassTheme(enabled);
+						document.dispatchEvent(new CustomEvent("glass-theme-change", { detail: { enabled: enabled } }));
+					},
+					toggleGlass: function () {
+						const current = getGlassEnabled();
+						const next = !current;
+						try {
+							localStorage.setItem(GLASS_THEME_KEY, String(next));
+						} catch (_) {}
+						applyGlassTheme(next);
+						document.dispatchEvent(new CustomEvent("glass-theme-change", { detail: { enabled: next } }));
 						return next;
 					},
 				};

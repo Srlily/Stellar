@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",
+    "@astrojs/react": "^5.0.7",
     "@fancyapps/ui": "6.1.14",
     "@fontsource-variable/jetbrains-mono": "5.2.6",
     "@iconify-json/fa7-brands": "1.2.2",
@@ -30,6 +31,8 @@
     "astro": "^6.4.4",
     "astro-icon": "1.1.5",
     "mermaid": "^11.15.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "satori": "0.26.0",
     "sharp": "0.34.5",
     "swup": "^4.9.0",

@@ -33,6 +33,24 @@ export const siteConfig: SiteConfig = {
 	// 选项："light" | "dark" | "system"
 	theme: "system",
 
+	// 液态玻璃主题配置
+	glassTheme: {
+		// 是否启用液态玻璃主题（默认关闭，用户可通过切换按钮开启）
+		enable: false,
+		// 折射模式：standard（标准）| polar（极坐标）| prominent（突出）
+		refractionMode: "standard",
+		// 位移强度，0-200
+		displacementScale: 70,
+		// 模糊程度，0-1
+		blurAmount: 0.0625,
+		// 饱和度，100-300
+		saturation: 140,
+		// 色散强度，0-20
+		aberrationIntensity: 2,
+		// 圆角半径，0-999（999 = 完全圆角）
+		cornerRadius: 24,
+	},
+
 	// 统计分析
 	analytics: {
 		// Google Analytics ID
