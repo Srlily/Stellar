@@ -159,7 +159,7 @@ const hasMore = modalCards.length > 0;
 							target={card.url.startsWith("/") ? "_self" : "_blank"}
 							rel={card.url.startsWith("/") ? "" : "noopener noreferrer"}
 							class:list={[
-								"group/card relative flex items-center gap-3 overflow-hidden border backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
+								"group/card relative flex items-center gap-3 overflow-hidden border transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
 								glassEnabled
 									? "border-white/20 bg-white/10 backdrop-blur-xl"
 									: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400",
@@ -248,7 +248,7 @@ const hasMore = modalCards.length > 0;
 						<button
 							type="button"
 							class:list={[
-								"group/card relative flex w-full items-center gap-3 overflow-hidden border backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 cursor-pointer",
+								"group/card relative flex w-full items-center gap-3 overflow-hidden border transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 cursor-pointer",
 								glassEnabled
 									? "border-white/20 bg-white/10 backdrop-blur-xl"
 									: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400",

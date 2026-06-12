@@ -27,7 +27,7 @@ const validProjects = projects.filter((project) => project.name && project.name.
 
 {isEnabled && validProjects.length > 0 && (
 	<section class:list={[
-		"rounded-2xl border p-6 backdrop-blur-sm",
+		"rounded-2xl border p-6",
 		glassEnabled
 			? "border-white/20 bg-white/10 backdrop-blur-xl"
 			: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",

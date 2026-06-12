@@ -64,7 +64,7 @@ export const siteConfig: SiteConfig = {
 		// Umami 统计配置
 		umamiAnalytics: {
 			// Umami Website ID
-			websiteId: "2cb2c382-952b-4f37-8295-0987a8684603",
+			websiteId: "",
 			// Umami JS地址，支持使用自建
 			scriptUrl: "https://umami-server.com/js/umami.js",
 			// Umami 会话回放脚本地址，支持使用自建
