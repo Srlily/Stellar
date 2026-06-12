@@ -21,7 +21,7 @@ export const siteConfig: SiteConfig = {
 	// 站点关键词
 	keywords: [
 		"Astro",
-		"Stellar",
+		"Steilar",
 	],
 
 	// 主页布局模式
