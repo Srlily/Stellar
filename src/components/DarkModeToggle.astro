@@ -2,6 +2,7 @@
 /**
  * 主题切换组件
  * 支持 light / dark / system 三种模式循环切换
+ * 当 glassTheme.enable 为 true 时，隐藏此组件
  */
 import Icon from "./Icon.astro";
 ---
@@ -61,6 +62,14 @@ import Icon from "./Icon.astro";
 		const toggle = document.getElementById("theme-toggle");
 		if (!toggle) return;
 
+		// glass 启用时隐藏整个按钮
+		if (window.__theme?.glassEnabled) {
+			toggle.classList.add("hidden");
+			return;
+		} else {
+			toggle.classList.remove("hidden");
+		}
+
 		// 初始化图标
 		if (window.__theme) {
 			updateThemeIcon(window.__theme.getMode());
@@ -71,10 +80,13 @@ import Icon from "./Icon.astro";
 			if (window.__theme) {
 				const newMode = window.__theme.cycleMode();
 				updateThemeIcon(newMode);
-				// 触发自定义事件，让其他组件响应主题变化
-				document.dispatchEvent(new CustomEvent("theme-change", { detail: { mode: newMode } }));
 			}
 		});
+
+		// 监听主题变化事件
+		document.addEventListener("theme-change", ((e: CustomEvent) => {
+			updateThemeIcon(e.detail.mode);
+		}) as EventListener);
 
 		// 监听系统主题变化，更新图标
 		if (window.matchMedia) {

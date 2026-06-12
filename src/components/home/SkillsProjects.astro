@@ -4,7 +4,11 @@
  * 展示技能熟练度和项目
  */
 import { homeConfig } from "@/config/homeConfig";
+import { siteConfig } from "@/config/siteConfig";
 import Icon from "@/components/Icon.astro";
+
+// 液态玻璃模式下使用透明背景
+const glassEnabled = siteConfig.glassTheme?.enable ?? false;
 
 interface Props {
 	class?: string;
@@ -83,11 +87,27 @@ const projectGridClass = getProjectGridClass(projectColumns);
 ---
 
 {showTabs && (
-	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80 animate-on-scroll anim-fade-up stagger-5", className]}>
+	<section class:list={[
+		"rounded-2xl border p-6 backdrop-blur-sm animate-on-scroll anim-fade-up stagger-5",
+		glassEnabled
+			? "border-white/15 bg-white/5 backdrop-blur-xl"
+			: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
+		className,
+	]}>
 		{/* 选项卡标题 */}
-		<div class="tabs-container relative mb-6 flex rounded-lg bg-slate-100 p-1 dark:bg-slate-700/50">
+		<div class:list={[
+			"tabs-container relative mb-6 flex rounded-lg p-1",
+			glassEnabled
+				? "bg-white/10 backdrop-blur-sm"
+				: "bg-slate-100 dark:bg-slate-700/50",
+		]}>
 			{/* 滑动指示器 */}
-			<div id="tab-indicator" class="tab-indicator absolute top-1 h-[calc(100%-8px)] w-[calc(50%-4px)] rounded-md bg-slate-200 shadow-sm transition-all duration-300 ease-out dark:bg-slate-600"></div>
+			<div id="tab-indicator" class:list={[
+				"tab-indicator absolute top-1 h-[calc(100%-8px)] w-[calc(50%-4px)] rounded-md shadow-sm transition-all duration-300 ease-out",
+				glassEnabled
+					? "bg-white/20"
+					: "bg-slate-200 dark:bg-slate-600",
+			]}></div>
 			{/* 技能按钮 */}
 			<button
 				type="button"
@@ -141,13 +161,21 @@ const projectGridClass = getProjectGridClass(projectColumns);
 						target={project.url.startsWith("/") ? "_self" : "_blank"}
 						rel={project.url.startsWith("/") ? "" : "noopener noreferrer"}
 						class:list={[
-							"group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400",
+							"group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
+							glassEnabled
+								? "border-white/20 bg-white/10 backdrop-blur-xl"
+								: "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400",
 							"animate-on-scroll anim-fade-up",
 							`stagger-${Math.min(index + 1, 8)}`,
 						]}
 					>
 						{/* 项目图片或图标 */}
-						<div class="relative h-16 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
+						<div class:list={[
+							"relative h-16 w-full overflow-hidden rounded-lg",
+							glassEnabled
+								? "bg-white/10"
+								: "bg-slate-100 dark:bg-slate-600",
+						]}>
 							{project.image ? (
 								<img
 									src={project.image}
@@ -183,7 +211,12 @@ const projectGridClass = getProjectGridClass(projectColumns);
 						{project.tags && project.tags.length > 0 && (
 							<div class="project-tags-container flex flex-nowrap gap-1 overflow-hidden">
 								{project.tags.map((tag, index) => (
-									<span class="project-tag inline-flex items-center whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-600 dark:text-slate-300" data-index={index}>
+									<span class:list={[
+										"project-tag inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium",
+										glassEnabled
+											? "bg-white/20 text-slate-700"
+											: "bg-slate-100 text-slate-600 dark:bg-slate-600 dark:text-slate-300",
+									]} data-index={index}>
 										{tag}
 									</span>
 								))}
@@ -197,13 +230,21 @@ const projectGridClass = getProjectGridClass(projectColumns);
 					<button
 						type="button"
 						class:list={[
-							"group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400 cursor-pointer",
+							"group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 cursor-pointer",
+							glassEnabled
+								? "border-white/20 bg-white/10 backdrop-blur-xl"
+								: "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400",
 							"animate-on-scroll anim-fade-up",
 							`stagger-${Math.min(visibleProjects.length + 1, 8)}`,
 						]}
 						id="project-modal-open"
 					>
-						<div class="relative h-16 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
+						<div class:list={[
+							"relative h-16 w-full overflow-hidden rounded-lg",
+							glassEnabled
+								? "bg-white/10"
+								: "bg-slate-100 dark:bg-slate-600",
+						]}>
 							<div class="flex h-full w-full items-center justify-center">
 								<Icon name="material-symbols:add-rounded" size={`${projectIconSize}px`} class="text-slate-400" />
 							</div>
@@ -315,7 +356,13 @@ const projectGridClass = getProjectGridClass(projectColumns);
 )}
 
 {onlySkills && (
-	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80 animate-on-scroll anim-fade-up stagger-5", className]}>
+	<section class:list={[
+		"rounded-2xl border p-6 backdrop-blur-sm animate-on-scroll anim-fade-up stagger-5",
+		glassEnabled
+			? "border-white/15 bg-white/5 backdrop-blur-xl"
+			: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
+		className,
+	]}>
 		{/* 头部 */}
 		<div class="mb-6 flex items-center gap-2">
 			<Icon name="material-symbols:build-outline-rounded" size={`${iconSize}px`} class="text-primary-500" />
@@ -351,7 +398,13 @@ const projectGridClass = getProjectGridClass(projectColumns);
 )}
 
 {onlyProjects && (
-	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80 animate-on-scroll anim-fade-up stagger-5", className]}>
+	<section class:list={[
+		"rounded-2xl border p-6 backdrop-blur-sm animate-on-scroll anim-fade-up stagger-5",
+		glassEnabled
+			? "border-white/15 bg-white/5 backdrop-blur-xl"
+			: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
+		className,
+	]}>
 		{/* 头部 */}
 		<div class="mb-6 flex items-center gap-2">
 			<Icon name="material-symbols:folder-outline-rounded" size={`${projectIconSize}px`} class="text-primary-500" />
@@ -369,13 +422,21 @@ const projectGridClass = getProjectGridClass(projectColumns);
 						target={project.url.startsWith("/") ? "_self" : "_blank"}
 						rel={project.url.startsWith("/") ? "" : "noopener noreferrer"}
 						class:list={[
-							"group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400",
+							"group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
+							glassEnabled
+								? "border-white/20 bg-white/10 backdrop-blur-xl"
+								: "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400",
 							"animate-on-scroll anim-fade-up",
 							`stagger-${Math.min(index + 1, 8)}`,
 						]}
 					>
 						{/* 项目图片或图标 */}
-						<div class="relative h-20 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
+						<div class:list={[
+							"relative h-20 w-full overflow-hidden rounded-lg",
+							glassEnabled
+								? "bg-white/10"
+								: "bg-slate-100 dark:bg-slate-600",
+						]}>
 							{project.image ? (
 								<img
 									src={project.image}
@@ -411,7 +472,12 @@ const projectGridClass = getProjectGridClass(projectColumns);
 						{project.tags && project.tags.length > 0 && (
 							<div class="project-tags-container flex flex-nowrap gap-1 overflow-hidden">
 								{project.tags.map((tag, index) => (
-									<span class="project-tag inline-flex items-center whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-600 dark:text-slate-300" data-index={index}>
+									<span class:list={[
+										"project-tag inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium",
+										glassEnabled
+											? "bg-white/20 text-slate-700"
+											: "bg-slate-100 text-slate-600 dark:bg-slate-600 dark:text-slate-300",
+									]} data-index={index}>
 										{tag}
 									</span>
 								))}
@@ -425,13 +491,21 @@ const projectGridClass = getProjectGridClass(projectColumns);
 					<button
 						type="button"
 						class:list={[
-							"group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400 cursor-pointer",
+							"group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 cursor-pointer",
+							glassEnabled
+								? "border-white/20 bg-white/10 backdrop-blur-xl"
+								: "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400",
 							"animate-on-scroll anim-fade-up",
 							`stagger-${Math.min(visibleProjects.length + 1, 8)}`,
 						]}
 						id="project-modal-open"
 					>
-						<div class="relative h-20 w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-600">
+						<div class:list={[
+							"relative h-20 w-full overflow-hidden rounded-lg",
+							glassEnabled
+								? "bg-white/10"
+								: "bg-slate-100 dark:bg-slate-600",
+						]}>
 							<div class="flex h-full w-full items-center justify-center">
 								<Icon name="material-symbols:add-rounded" size={`${projectIconSize}px`} class="text-slate-400" />
 							</div>
@@ -451,10 +525,18 @@ const projectGridClass = getProjectGridClass(projectColumns);
 {projectHasMore && (
 	<div
 		id="project-modal"
-		class="modal-backdrop fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+		class:list={[
+			"modal-backdrop fixed inset-0 z-50 hidden items-center justify-center p-4 backdrop-blur-sm",
+			glassEnabled ? "bg-black/30" : "bg-black/50",
+		]}
 		aria-hidden="true"
 	>
-		<div class="modal-content max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+		<div class:list={[
+			"modal-content max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border p-6 shadow-xl",
+			glassEnabled
+				? "border-white/30 bg-white/20 backdrop-blur-2xl shadow-black/10"
+				: "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800",
+		]}>
 			<div class="mb-4 flex items-center justify-between">
 				<h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">更多项目</h2>
 				<button
@@ -471,7 +553,12 @@ const projectGridClass = getProjectGridClass(projectColumns);
 						href={project.url}
 						target={project.url.startsWith("/") ? "_self" : "_blank"}
 						rel={project.url.startsWith("/") ? "" : "noopener noreferrer"}
-						class="group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400"
+						class:list={[
+							"group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg",
+							glassEnabled
+								? "border-white/20 bg-white/30"
+								: "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400",
+						]}
 					>
 						<div class="flex flex-col gap-1">
 							<h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover/card:text-primary-500 transition-colors">
@@ -486,7 +573,12 @@ const projectGridClass = getProjectGridClass(projectColumns);
 						{project.tags && project.tags.length > 0 && (
 							<div class="project-tags-container flex flex-nowrap gap-1 overflow-hidden">
 								{project.tags.map((tag, index) => (
-									<span class="project-tag inline-flex items-center whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-600 dark:text-slate-300" data-index={index}>
+									<span class:list={[
+										"project-tag inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium",
+										glassEnabled
+											? "bg-white/20 text-slate-700"
+											: "bg-slate-100 text-slate-600 dark:bg-slate-600 dark:text-slate-300",
+									]} data-index={index}>
 										{tag}
 									</span>
 								))}
@@ -571,7 +663,10 @@ const projectGridClass = getProjectGridClass(projectColumns);
 					let overflowBadge = container.querySelector('.tag-overflow-badge');
 					if (!overflowBadge) {
 						overflowBadge = document.createElement('span');
-						overflowBadge.className = 'tag-overflow-badge inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-600 dark:text-slate-300';
+						const isGlass = document.documentElement.classList.contains('glass-theme');
+						overflowBadge.className = isGlass
+							? 'tag-overflow-badge inline-flex items-center rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-slate-700'
+							: 'tag-overflow-badge inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-600 dark:text-slate-300';
 						container.appendChild(overflowBadge);
 					}
 					overflowBadge.textContent = '+' + hiddenCount;

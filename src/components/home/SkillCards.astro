@@ -4,7 +4,10 @@
  * 展示技能熟练度
  */
 import { homeConfig } from "@/config/homeConfig";
+import { siteConfig } from "@/config/siteConfig";
 import Icon from "@/components/Icon.astro";
+
+const glassEnabled = siteConfig.glassTheme?.enable ?? false;
 
 interface Props {
 	class?: string;
@@ -73,7 +76,13 @@ const responsiveStyle = `
 ---
 
 {isEnabled && validSkills.length > 0 && (
-	<section class:list={["rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80", className]}>
+	<section class:list={[
+		"rounded-2xl border p-6 backdrop-blur-sm",
+		glassEnabled
+			? "border-white/20 bg-white/10 backdrop-blur-xl"
+			: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
+		className,
+	]}>
 		<style is:inline set:html={responsiveStyle}></style>
 		{/* 头部 */}
 		<div class="mb-6 flex items-center gap-2">

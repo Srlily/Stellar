@@ -31,12 +31,16 @@ export const siteConfig: SiteConfig = {
 
 	// 主题模式
 	// 选项："light" | "dark" | "system"
+	// - light: 始终使用亮色模式
+	// - dark: 始终使用暗色模式
+	// - system: 跟随系统主题
 	theme: "system",
 
 	// 液态玻璃主题配置
+	// 启用后作为独立模式，深浅色切换失效且不显示切换按钮
 	glassTheme: {
-		// 是否启用液态玻璃主题（默认关闭，用户可通过切换按钮开启）
-		enable: false,
+		// 是否启用液态玻璃主题（默认关闭）
+		enable: true,
 		// 折射模式：standard（标准）| polar（极坐标）| prominent（突出）
 		refractionMode: "standard",
 		// 位移强度，0-200
