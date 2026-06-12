@@ -10,7 +10,7 @@ export type GlassRefractionMode = "standard" | "polar" | "prominent";
 
 // 液态玻璃主题配置
 export interface GlassThemeConfig {
-	enable?: boolean; // 是否启用液态玻璃主题（默认 false）
+	enable?: boolean; // 是否启用液态玻璃主题（默认 false），启用后深浅色切换失效
 	refractionMode?: GlassRefractionMode; // 折射模式，默认 "standard"
 	displacementScale?: number; // 位移强度，0-200，默认 70
 	blurAmount?: number; // 模糊程度，0-1，默认 0.0625
@@ -260,6 +260,7 @@ export type SiteConfig = {
 	theme?: typeof LIGHT_MODE | typeof DARK_MODE | typeof SYSTEM_MODE;
 
 	// 液态玻璃主题配置
+	// 启用后作为独立模式，深浅色切换失效且不显示切换按钮
 	glassTheme?: GlassThemeConfig;
 
 	// 主页布局：vertical（垂直排列）| horizontal（水平排列）

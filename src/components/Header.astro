@@ -2,7 +2,6 @@
 import { siteConfig } from "@/config/siteConfig";
 import LanguageSwitcher from "@/components/LanguageSwitcher.astro";
 import DarkModeToggle from "@/components/DarkModeToggle.astro";
-import GlassThemeToggle from "@/components/GlassThemeToggle.astro";
 
 interface Props {
 	class?: string;
@@ -10,8 +9,8 @@ interface Props {
 
 const { class: className = "" } = Astro.props;
 
-// 是否显示液态玻璃主题切换按钮
-const showGlassToggle = siteConfig.glassTheme !== undefined;
+// 液态玻璃启用时，不渲染深浅色切换按钮
+const glassEnabled = siteConfig.glassTheme?.enable ?? false;
 ---
 
 <header
@@ -22,6 +21,5 @@ const showGlassToggle = siteConfig.glassTheme !== undefined;
 	]}
 >
 	<LanguageSwitcher />
-	{showGlassToggle && <GlassThemeToggle />}
-	<DarkModeToggle />
+	{!glassEnabled && <DarkModeToggle />}
 </header>
