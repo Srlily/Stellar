@@ -11,41 +11,59 @@ interface Props {
 const { class: className = "" } = Astro.props;
 
 const avatar = getThemeImagePair(homeConfig.avatar);
+const titlePosition = homeConfig.avatar?.titlePosition || "bottom";
+const isTitleLeft = titlePosition === "left";
+// 优先使用 homeConfig.avatar.title，否则使用 siteConfig.title
+const displayTitle = homeConfig.avatar?.title || siteConfig.title;
 ---
 
 <section
 	class:list={[
-		"flex flex-col items-center gap-4 text-center md:justify-center md:gap-5",
+		"flex w-full flex-col items-center gap-4 text-center",
 		className,
 	]}
 >
-	<div class="avatar-wrapper relative shrink-0 animate-on-scroll anim-scale" id="avatar-container">
-		{avatar.light && (
+	<div
+		class:list={[
+			"flex items-center justify-center gap-4",
+			isTitleLeft ? "md:flex-row md:gap-5" : "md:flex-col md:gap-4",
+		]}
+	>
+		<div class="avatar-wrapper relative shrink-0 animate-on-scroll anim-scale" id="avatar-container">
+			{avatar.light && (
+				<img
+					src={avatar.light.src}
+					alt={siteConfig.title}
+					id="avatar-light"
+					class="h-20 w-20 rounded-2xl object-cover shadow-md transition-transform duration-300 hover:scale-105 md:h-24 md:w-24"
+					loading="lazy"
+					decoding="async"
+				/>
+			)}
+		{avatar.dark && (
 			<img
-				src={avatar.light.src}
+				src={avatar.dark.src}
 				alt={siteConfig.title}
-				id="avatar-light"
+				id="avatar-dark"
 				class="h-20 w-20 rounded-2xl object-cover shadow-md transition-transform duration-300 hover:scale-105 md:h-24 md:w-24"
+				style="display: none;"
 				loading="lazy"
 				decoding="async"
 			/>
 		)}
-	{avatar.dark && (
-		<img
-			src={avatar.dark.src}
-			alt={siteConfig.title}
-			id="avatar-dark"
-			class="h-20 w-20 rounded-2xl object-cover shadow-md transition-transform duration-300 hover:scale-105 md:h-24 md:w-24"
-			style="display: none;"
-			loading="lazy"
-			decoding="async"
-		/>
-	)}
-</div>
-<h1 class="text-2xl font-bold text-slate-900 dark:text-slate-100 md:text-3xl animate-on-scroll anim-fade-up stagger-2">
-	{siteConfig.title}
-</h1>
-<SiteInfo />
+	</div>
+		<h1
+			class:list={[
+				"font-bold text-slate-900 dark:text-slate-100 animate-on-scroll anim-fade-up stagger-2",
+				isTitleLeft
+					? "text-2xl md:text-5xl"
+					: "text-2xl md:text-3xl",
+			]}
+		>
+			{displayTitle}
+		</h1>
+	</div>
+	<SiteInfo />
 </section>
 
 <script is:inline>

@@ -7,7 +7,7 @@ const SITE_LANG = "zh_CN";
 
 export const siteConfig: SiteConfig = {
 	// 站点标题
-	title: "Stellar",
+	title: "Steilar",
 
 	// 站点副标题
 	subtitle: "一个简洁高效的 Astro 站点",
@@ -16,7 +16,7 @@ export const siteConfig: SiteConfig = {
 	site_url: "",
 
 	// 站点描述
-	description:"Stellar 星际",
+	description:"Steilar 星澜",
 
 	// 站点关键词
 	keywords: [
@@ -27,7 +27,7 @@ export const siteConfig: SiteConfig = {
 	// 主页布局模式
 	// 选项："vertical" | "horizontal"
 	// 由 src/pages/index.astro 读取并切换到对应的页面文件
-	homeLayout: "vertical",
+	homeLayout: "horizontal",
 
 	// 主题模式
 	// 选项："light" | "dark" | "system"
@@ -40,7 +40,7 @@ export const siteConfig: SiteConfig = {
 	// 启用后作为独立模式，深浅色切换失效且不显示切换按钮
 	glassTheme: {
 		// 是否启用液态玻璃主题（默认关闭）
-		enable: true,
+		enable: false,
 		// 折射模式：standard（标准）| polar（极坐标）| prominent（突出）
 		refractionMode: "standard",
 		// 位移强度，0-200

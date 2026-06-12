@@ -3,8 +3,15 @@ import type { HomeConfig } from "@/types/config";
 export const homeConfig: HomeConfig = {
 	// 头像 / Logo 配置
 	avatar: {
-		baseName: "Stellar",
+		baseName: "Steilar",
 		path: "assets/images",
+		// 标题（h1）显示文字
+		// 留空则使用 siteConfig.title
+		title: "Steilar | 星澜",
+		// 标题（h1）相对于头像（img）的位置
+		// "bottom"（默认）：标题在头像下方
+		// "left"：标题在头像左侧（与头像水平排列）
+		titlePosition: "left",
 	},
 
 	// 标题下方信息区域配置
@@ -80,7 +87,7 @@ export const homeConfig: HomeConfig = {
 		// 是否启用时间与天气卡片（false 可关闭显示）
 		enable: true,
 		// 布局模式："double"（双卡片，默认）| "single"（单卡片合并显示）
-		layout: "single",
+		layout: "double",
 		// 是否显示"当前时间"和"天气"标签文字（默认 true）
 		showLabels: true,
 		// 卡片内文字对齐方式："left"（左对齐）| "center"（居中）| "right"（右对齐）
@@ -134,7 +141,7 @@ export const homeConfig: HomeConfig = {
 		// 是否启用导航卡片（false 可关闭显示）
 		enable: true,
 		// 每行显示的卡片数量（默认4）
-		columns: 4,
+		columns: 3,
 		// 是否显示更多按钮（默认false，"更多"按钮占据一格）
 		showMoreButton: false,
 		// 最多显示的行数（showMoreButton 为 false 时生效，0 表示不限制）
@@ -145,6 +152,18 @@ export const homeConfig: HomeConfig = {
 		faviconSize: 32,
 		// icon 图标大小（默认24，单位px）
 		iconSize: 32,
+		// 卡片尺寸配置（所有字段可选，不填则使用默认值）
+		cardSize: {
+			// 图标容器宽度（px），默认 48
+			iconBox: 48,
+			// 卡片内边距（px），默认 16
+			padding: 16,
+			// 卡片圆角（px），默认 16
+			rounded: 16,
+			// 卡片最小宽度（px），默认 0（不限制）
+			// 设置后每张卡片最小宽度为此值，配合 columns 使用
+			minWidth: 0,
+		},
 		// 导航卡片列表
 		items: [
 			// 可配置的字段：

@@ -44,7 +44,7 @@ const textAlign = align === "center" ? "text-center" : align === "right" ? "text
 {isEnabled && (timeEnabled || weatherEnabled) && (
 	isSingle ? (
 		/* ========== 单卡片模式（一行显示） ========== */
-		<section class="animate-on-scroll anim-fade-up stagger-1">
+		<section class="w-full animate-on-scroll anim-fade-up stagger-1">
 			<div class:list={[
 				"group/card relative overflow-hidden rounded-2xl border px-6 py-4 backdrop-blur-sm w-full",
 				"transition-all duration-300",
@@ -121,11 +121,11 @@ const textAlign = align === "center" ? "text-center" : align === "right" ? "text
 		</section>
 	) : (
 		/* ========== 双卡片模式 ========== */
-		<section class="grid grid-cols-2 gap-4">
+		<section class="w-full flex gap-4">
 			{/* 时间卡片 */}
 			{timeEnabled && (
 				<div class:list={[
-					"group/card relative overflow-hidden rounded-2xl border p-4 backdrop-blur-sm",
+					"group/card relative overflow-hidden rounded-2xl border p-4 backdrop-blur-sm flex-1 min-w-0",
 					"transition-all duration-300",
 					"hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
 					"dark:hover:border-primary-400",
@@ -156,7 +156,7 @@ const textAlign = align === "center" ? "text-center" : align === "right" ? "text
 			{/* 天气卡片 */}
 			{weatherEnabled && (
 				<div class:list={[
-					"group/card relative overflow-hidden rounded-2xl border p-4 backdrop-blur-sm",
+					"group/card relative overflow-hidden rounded-2xl border p-4 backdrop-blur-sm flex-1 min-w-0",
 					"transition-all duration-300",
 					"hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
 					"dark:hover:border-primary-400",

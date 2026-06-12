@@ -144,6 +144,18 @@ export interface NavCardsConfig {
 	autoFavicon?: boolean; // 是否自动解析网站的 favicon 图标（默认true）
 	faviconSize?: number; // 自动解析的 favicon 图标大小（默认48，单位px）
 	iconSize?: number; // icon 图标大小（默认24，单位px）
+	// 卡片尺寸配置
+	cardSize?: {
+		// 图标容器宽度（默认 48px = h-12 w-12）
+		iconBox?: number;
+		// 卡片内边距（默认 16px = p-4）
+		padding?: number;
+		// 卡片圆角（默认 16px = rounded-2xl）
+		rounded?: number;
+		// 卡片最小宽度（px），设置后每张卡片最小宽度为此值
+		// 配合 columns 使用：实际宽度 = max(列数均分宽度, minWidth)
+		minWidth?: number;
+	};
 }
 
 // ==================== 时间与天气卡片类型 ====================
@@ -229,6 +241,13 @@ export interface HomeConfig {
 		path?: string;
 		extension?: string;
 		url?: string | { light?: string; dark?: string };
+		// 标题（h1）显示文字
+		// 留空则使用 siteConfig.title
+		title?: string;
+		// 标题（h1）相对于头像（img）的位置
+		// - "bottom"（默认）：标题在头像下方
+		// - "left"：标题在头像左侧（与头像水平排列）
+		titlePosition?: "bottom" | "left";
 	};
 	headerInfo?: HeaderInfoType;
 	hitokotoUrl?: string;

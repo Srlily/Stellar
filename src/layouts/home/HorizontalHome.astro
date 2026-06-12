@@ -9,12 +9,14 @@ import Footer from "@/components/Footer.astro";
 ---
 
 <Layout title="首页 · Stellar">
-	<section class="mx-auto flex max-w-5xl flex-col gap-12 px-6 py-16">
+	<section class="mx-auto flex min-h-screen max-w-[100rem] flex-col justify-center gap-12 px-6">
 		<Header />
-		<div class="grid gap-12 md:grid-cols-2">
-			<Avatar />
-			<div class="flex flex-col gap-8">
-				<SocialLinks class="-mt-2" />
+		<div class="w-full grid items-center gap-8 md:grid-cols-[1fr_1.3fr]">
+			<div class="flex min-w-0 flex-col items-center justify-center gap-8">
+				<Avatar />
+				<SocialLinks />
+			</div>
+			<div class="flex min-w-0 flex-col gap-6">
 				<TimeWeatherCards />
 				<NavCards />
 			</div>
