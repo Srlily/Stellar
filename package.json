@@ -30,6 +30,7 @@
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^6.4.4",
     "astro-icon": "1.1.5",
+    "gsap": "^3.15.0",
     "mermaid": "^11.15.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

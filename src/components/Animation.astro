@@ -1,0 +1,186 @@
+---
+// 全局动画组件 - 使用 GSAP 实现页面动画效果
+---
+
+<script>
+  import { gsap } from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+  // 注册 ScrollTrigger 插件
+  gsap.registerPlugin(ScrollTrigger);
+
+  // 页面进入动画
+  function initPageAnimations() {
+    // 页面加载时的主内容动画
+    const animatedElements = document.querySelectorAll(".animate-on-enter");
+    if (animatedElements.length > 0) {
+      gsap.fromTo(
+        animatedElements,
+        { opacity: 0, y: 20 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          stagger: 0.08,
+          ease: "power2.out",
+        }
+      );
+    }
+
+    // 滚动触发的动画
+    const scrollAnimatedElements = document.querySelectorAll(".animate-on-scroll");
+    scrollAnimatedElements.forEach((el, index) => {
+      const delay = (index % 8) * 0.1; // 限制最大 stagger 延迟
+
+      gsap.fromTo(
+        el,
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          delay,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: el,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+    });
+
+    // Avatar 特殊缩放动画
+    const avatarContainer = document.getElementById("avatar-container");
+    if (avatarContainer) {
+      gsap.fromTo(
+        avatarContainer,
+        { opacity: 0, scale: 0.8 },
+        {
+          opacity: 1,
+          scale: 1,
+          duration: 0.8,
+          delay: 0.2,
+          ease: "back.out(1.7)",
+        }
+      );
+    }
+
+    // 卡片悬停增强动画
+    const cards = document.querySelectorAll(".card-item");
+    cards.forEach((card) => {
+      card.addEventListener("mouseenter", () => {
+        gsap.to(card.querySelector("a"), {
+          scale: 1.02,
+          duration: 0.3,
+          ease: "power2.out",
+        });
+      });
+      card.addEventListener("mouseleave", () => {
+        gsap.to(card.querySelector("a"), {
+          scale: 1,
+          duration: 0.3,
+          ease: "power2.out",
+        });
+      });
+    });
+
+    // Social links 动画
+    const socialLinks = document.querySelectorAll(".social-link-item");
+    if (socialLinks.length > 0) {
+      gsap.fromTo(
+        socialLinks,
+        { opacity: 0, x: -20 },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 0.5,
+          stagger: 0.1,
+          delay: 0.5,
+          ease: "power2.out",
+        }
+      );
+    }
+  }
+
+  // 弹窗动画
+  function initModalAnimations() {
+    const modal = document.getElementById("nav-cards-modal");
+    const modalContent = modal?.querySelector(".modal-content");
+
+    if (modal && modalContent) {
+      // 存储原始的打开/关闭方法
+      const originalOpen = () => {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+
+        // GSAP 动画
+        gsap.fromTo(
+          modal,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.25, ease: "power2.out" }
+        );
+        gsap.fromTo(
+          modalContent,
+          { opacity: 0, scale: 0.95, y: 20 },
+          {
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            duration: 0.3,
+            delay: 0.1,
+            ease: "back.out(1.2)",
+          }
+        );
+      };
+
+      const originalClose = () => {
+        gsap.to(modal, { opacity: 0, duration: 0.2, ease: "power2.in" });
+        gsap.to(modalContent, {
+          opacity: 0,
+          scale: 0.95,
+          y: 20,
+          duration: 0.2,
+          ease: "power2.in",
+          onComplete: () => {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+            modal.setAttribute("aria-hidden", "true");
+            document.body.style.overflow = "";
+          },
+        });
+      };
+
+      // 拦截现有的事件监听器
+      const moreBtn = document.getElementById("nav-cards-more-btn");
+      const closeBtn = document.getElementById("nav-cards-modal-close");
+
+      if (moreBtn) {
+        moreBtn.addEventListener("click", originalOpen);
+      }
+      if (closeBtn) {
+        closeBtn.addEventListener("click", originalClose);
+      }
+    }
+  }
+
+  // 初始化
+  function init() {
+    initPageAnimations();
+    initModalAnimations();
+  }
+
+  // 页面加载完成后初始化
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+
+  // SWUP 页面切换后重新初始化动画
+  document.addEventListener("swup:content", () => {
+    setTimeout(init, 100);
+  });
+</script>

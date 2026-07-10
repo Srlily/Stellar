@@ -4,6 +4,7 @@ import { LIGHT_MODE, DARK_MODE, SYSTEM_MODE } from '../constants';
 import { siteConfig } from '@/config/siteConfig';
 import { backgroundConfig } from '@/config/backgroundConfig';
 import Background from '@/components/Background.astro';
+import Animation from '@/components/Animation.astro';
 
 interface Props {
 	title?: string;
@@ -135,39 +136,10 @@ const align = backgroundConfig.align ?? "center";
 	</head>
 	<body class="flex min-h-dvh flex-col bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
 		<Background />
+		<Animation />
 		<main id="swup" class={`flex flex-1 flex-col transition-fade${align === "center-center" ? " align-center-center" : ""}`}>
 			<slot />
 		</main>
 		<slot name="footer" />
-		{/* 滚动动画 Intersection Observer */}
-		<script is:inline>
-			(function () {
-				function observeAnimations() {
-					var els = document.querySelectorAll('.animate-on-scroll');
-					if (!els.length) return;
-					var observer = new IntersectionObserver(function (entries) {
-						entries.forEach(function (entry) {
-							if (entry.isIntersecting) {
-								entry.target.classList.add('is-visible');
-								observer.unobserve(entry.target);
-							}
-						});
-					}, { threshold: 0.1 });
-					els.forEach(function (el) {
-						if (!el.classList.contains('is-visible')) {
-							observer.observe(el);
-						}
-					});
-				}
-				if (document.readyState === 'loading') {
-					document.addEventListener('DOMContentLoaded', observeAnimations);
-				} else {
-					observeAnimations();
-				}
-				document.addEventListener('swup:content', function () {
-					setTimeout(observeAnimations, 50);
-				});
-			})();
-		</script>
 	</body>
 </html>
