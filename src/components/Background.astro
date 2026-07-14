@@ -46,6 +46,9 @@ const fullscreenPosition = fullscreen.position ?? "center";
 		class="background-wallpaper"
 		style={`--bg-position: ${fullscreenPosition};`}
 		data-effect={loadingEffect}
+		data-mode={mode}
+		data-desktop={desktopImage}
+		data-mobile={mobileImage}
 	>
 		{loadingEffect !== "none" && <div class="background-loader"></div>}
 		<img
@@ -69,6 +72,9 @@ const fullscreenPosition = fullscreen.position ?? "center";
 		id="background-wallpaper"
 		class="background-wallpaper"
 		data-effect={loadingEffect}
+		data-mode={mode}
+		data-desktop={desktopImage}
+		data-mobile={mobileImage}
 	>
 		{loadingEffect !== "none" && <div class="background-loader"></div>}
 		<div
@@ -83,39 +89,102 @@ const fullscreenPosition = fullscreen.position ?? "center";
 	</div>
 )}
 
-<script is:inline define:vars={{ mode, desktopImage, mobileImage }}>
-	// 设置背景模式标记
-	document.documentElement.dataset.background = mode;
+<script>
+	import { gsap } from "gsap";
 
-	(function () {
-		var wallpaper = document.getElementById('background-wallpaper');
+	type LoadingEffect = "shimmer" | "pulse" | "wave" | "none";
+
+	function init() {
+		const wallpaper = document.getElementById("background-wallpaper");
 		if (!wallpaper) return;
+		const wp = wallpaper; // 闭包内使用，TypeScript 收窄类型
 
-		function onReady() {
-			wallpaper.classList.add('bg-loaded');
+		// 从 data-* 属性读取配置（由 Astro 在构建时注入）
+		const mode = (wp.dataset.mode || "fullscreen") as "fullscreen" | "overlay" | "none";
+		const loadingEffect = (wp.dataset.effect || "shimmer") as LoadingEffect;
+		const desktopImage = wp.dataset.desktop || "";
+		const mobileImage = wp.dataset.mobile || "";
+
+		// 设置背景模式标记
+		document.documentElement.dataset.background = mode;
+
+		const loader = wp.querySelector<HTMLElement>(".background-loader");
+
+		// GSAP 背景 loading 效果
+		function initLoadingEffect() {
+			if (!loader || loadingEffect === "none") return;
+
+			const isDark = document.documentElement.classList.contains("dark");
+
+			switch (loadingEffect) {
+				case "shimmer":
+					gsap.to(loader, {
+						backgroundPosition: "200% 0",
+						duration: 1.8,
+						ease: "power1.inOut",
+						repeat: -1,
+						yoyo: true,
+					});
+					break;
+				case "pulse":
+					gsap.to(loader, {
+						opacity: 0.4,
+						duration: 1,
+						ease: "power1.inOut",
+						repeat: -1,
+						yoyo: true,
+					});
+					break;
+				case "wave":
+					// Wave 使用 CSS 伪元素，保持简洁
+					loader.style.backgroundColor = isDark ? "#1e293b" : "#e2e8f0";
+					break;
+			}
 		}
 
-		if (mode === 'fullscreen') {
-			var isMobile = window.innerWidth <= 768;
-			var img = wallpaper.querySelector(isMobile ? '.mobile-only' : '.desktop-only');
-			if (img && img.complete) {
+		function onReady() {
+			// 标记加载完成，让 CSS 接管淡入
+			wp.classList.add("bg-loaded");
+		}
+
+		// 初始化 loading 效果
+		if (loadingEffect !== "none" && loader) {
+			initLoadingEffect();
+		}
+
+		if (mode === "fullscreen") {
+			const isMobile = window.innerWidth <= 768;
+			const img = wp.querySelector<HTMLImageElement>(
+				isMobile ? ".mobile-only" : ".desktop-only"
+			);
+			if (img && img.complete && img.naturalWidth > 0) {
 				onReady();
 			} else if (img) {
-				img.addEventListener('load', onReady);
-				img.addEventListener('error', onReady);
+				img.addEventListener("load", onReady);
+				img.addEventListener("error", onReady);
 			} else {
 				onReady();
 			}
 		} else {
-			var url = window.innerWidth <= 768 ? mobileImage : desktopImage;
-			if (!url) { onReady(); return; }
-			var preloader = new Image();
+			const url = window.innerWidth <= 768 ? mobileImage : desktopImage;
+			if (!url) {
+				onReady();
+				return;
+			}
+			const preloader = new Image();
 			preloader.onload = onReady;
 			preloader.onerror = onReady;
 			preloader.src = url;
 			if (preloader.complete) onReady();
 		}
-	})();
+	}
+
+	// script 会被 Astro 提升到 head，需要等待 DOM 就绪
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", init);
+	} else {
+		init();
+	}
 </script>
 
 <style is:global>

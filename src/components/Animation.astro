@@ -1,13 +1,116 @@
 ---
-// 全局动画组件 - 使用 GSAP 实现页面动画效果
+// 全局动画组件 - 使用 GSAP 实现所有动画效果
 ---
 
 <script>
   import { gsap } from "gsap";
   import { ScrollTrigger } from "gsap/ScrollTrigger";
+  import { ScrollSmoother } from "gsap/ScrollSmoother";
 
-  // 注册 ScrollTrigger 插件
-  gsap.registerPlugin(ScrollTrigger);
+  // 注册 ScrollTrigger 和 ScrollSmoother 插件
+  gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
+
+  // 动画类型配置
+  const animationTypes: Record<string, { fromVars: gsap.TweenVars; toVars: gsap.TweenVars; stagger?: number }> = {
+    "anim-fade-up": {
+      fromVars: { opacity: 0, y: 30 },
+      toVars: { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
+    },
+    "anim-fade": {
+      fromVars: { opacity: 0 },
+      toVars: { opacity: 1, duration: 0.5, ease: "power2.out" },
+    },
+    "anim-scale": {
+      fromVars: { opacity: 0, scale: 0.85 },
+      toVars: { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.7)" },
+    },
+    "anim-slide-right": {
+      fromVars: { opacity: 0, x: 20 },
+      toVars: { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" },
+    },
+    "anim-progress": {
+      fromVars: { opacity: 0, y: 20 },
+      toVars: { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" },
+    },
+  };
+
+  // 获取元素的交错延迟
+  function getStaggerDelay(el: Element): number {
+    const staggerClass = Array.from(el.classList).find((c) => c.startsWith("stagger-"));
+    if (staggerClass) {
+      const num = parseInt(staggerClass.replace("stagger-", ""), 10);
+      return num * 0.05;
+    }
+    return 0;
+  }
+
+  // 初始化滚动触发的动画
+  function initScrollAnimations() {
+    const scrollAnimatedElements = document.querySelectorAll(".animate-on-scroll");
+
+    scrollAnimatedElements.forEach((el) => {
+      // 获取动画类型，默认为 fade-up
+      const animType = Object.keys(animationTypes).find((type) =>
+        el.classList.contains(type)
+      ) || "anim-fade-up";
+
+      const config = animationTypes[animType];
+      const staggerDelay = getStaggerDelay(el);
+
+      // 进度条特殊处理
+      if (animType === "anim-progress") {
+        const progressBar = el.querySelector(".progress-bar-fill");
+        if (progressBar) {
+          gsap.fromTo(
+            el,
+            { opacity: 0, y: 20 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.6,
+              delay: staggerDelay,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: el,
+                start: "top 85%",
+                toggleActions: "play none none reverse",
+              },
+            }
+          );
+          gsap.fromTo(
+            progressBar,
+            { width: "0%" },
+            {
+              width: progressBar.getAttribute("data-width") || "100%",
+              duration: 0.8,
+              delay: staggerDelay + 0.1,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: el,
+                start: "top 85%",
+                toggleActions: "play none none reverse",
+              },
+            }
+          );
+        }
+        return;
+      }
+
+      gsap.fromTo(
+        el,
+        config.fromVars,
+        {
+          ...config.toVars,
+          delay: staggerDelay,
+          scrollTrigger: {
+            trigger: el,
+            start: "top 85%",
+            toggleActions: "play none none reverse",
+          },
+        }
+      );
+    });
+  }
 
   // 页面进入动画
   function initPageAnimations() {
@@ -27,28 +130,8 @@
       );
     }
 
-    // 滚动触发的动画
-    const scrollAnimatedElements = document.querySelectorAll(".animate-on-scroll");
-    scrollAnimatedElements.forEach((el, index) => {
-      const delay = (index % 8) * 0.1; // 限制最大 stagger 延迟
-
-      gsap.fromTo(
-        el,
-        { opacity: 0, y: 40 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          delay,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: el,
-            start: "top 85%",
-            toggleActions: "play none none reverse",
-          },
-        }
-      );
-    });
+    // 初始化滚动动画
+    initScrollAnimations();
 
     // Avatar 特殊缩放动画
     const avatarContainer = document.getElementById("avatar-container");
@@ -168,8 +251,234 @@
 
   // 初始化
   function init() {
+    // 必须在 initPageAnimations 之前：ScrollSmoother 创建后，
+    // 后面的 ScrollTrigger 才会自动继承它的滚动上下文
+    initPageSystem();
     initPageAnimations();
     initModalAnimations();
+  }
+
+  // ========== 两页式平滑滚动系统 ==========
+
+  /**
+   * 初始化两页式布局的平滑滚动（仅首页有 .page 元素时生效）。
+   * - ScrollSmoother 提供惯性滚动（"无级滚动"）
+   * - 每页是一个 100vh 视口，通过垂直滚动切换
+   * - 第二页内容从底部淡入，方向与向下滚动一致
+   */
+  function initPageSystem() {
+    if (!document.querySelector(".page")) return;
+
+    // 创建 ScrollSmoother 实例
+    ScrollSmoother.create({
+      wrapper: "#smooth-wrapper",
+      content: "#smooth-content",
+      smooth: 1.2, // 平滑度（0-3，1.2 偏轻盈）
+      effects: false,
+      normalizeScroll: true, // 统一各浏览器滚动行为
+    });
+
+    initDirectionAwarePageTransitions();
+  }
+
+  /**
+   * 方向感知的页面切换动画 + 循环滚动
+   *
+   * 思路：
+   * - 利用 ScrollTrigger 自带的 direction 属性（1=向下进入, -1=向上进入）
+   *   在 onUpdate 中实时检测当前滚动方向，动态调整第二页内容的入场 y 值
+   * - 向下滚入第二页 → 内容从下方（y: 60 → 0）淡入
+   * - 向上滚入第二页 → 内容从上方（y: -60 → 0）淡入
+   * - 第一页内容相应地向相反方向滑出/滑入，形成对称
+   * - 循环滚动：在第二页底部继续向下 → 第一页从下方出现；
+   *             在第一页顶部继续向上 → 第二页从上方出现
+   */
+  function initDirectionAwarePageTransitions() {
+    const smoother = ScrollSmoother.get();
+    if (!smoother) return;
+
+    const page1Content = document.querySelector<HTMLElement>(".page-1 .page-content");
+    const page2Content = document.querySelector<HTMLElement>(".page-2 .page-content");
+    const page1 = document.querySelector<HTMLElement>(".page-1");
+    const page2 = document.querySelector<HTMLElement>(".page-2");
+    if (!page1Content || !page2Content || !page1 || !page2) return;
+
+    // ---- 第二页入场：scrub 让动画与滚动同步，并随方向改变入场方向 ----
+    // 用一个 ScrollTrigger 监听"接近第二页"区段，direction 自动反映滚动方向
+    ScrollTrigger.create({
+      trigger: ".page-2",
+      start: "top bottom", // 第二页顶部刚出现在视口底部时触发
+      end: "top 30%",
+      scrub: 0.4,
+      onUpdate: (self) => {
+        // direction: 1=向下进入, -1=向上进入
+        const dir = self.direction;
+        // progress: 0=未到第二页, 1=完全进入
+        const p = self.progress;
+        // 入场 y 偏移：向下进入时从 +60 出发，向上进入时从 -60 出发
+        const startY = dir === 1 ? 60 : -60;
+        const y = startY * (1 - p);
+        const opacity = p;
+        gsap.set(page2Content, { y, opacity });
+      },
+    });
+
+    // ---- 第二页反向离开（用户向上滚回第一页）：让第二页向下滑出 ----
+    ScrollTrigger.create({
+      trigger: ".page-2",
+      start: "top 50%",
+      onLeaveBack: () => {
+        gsap.to(page2Content, { y: 60, opacity: 0, duration: 0.4, ease: "power2.in" });
+      },
+    });
+
+    // ---- 第一页内容淡出/返回 ----
+    // 向下滚入第二页：让第一页内容向上滑出视野
+    ScrollTrigger.create({
+      trigger: ".page-2",
+      start: "top 80%",
+      onEnter: () => {
+        gsap.to(page1Content, { y: -40, opacity: 0, duration: 0.6, ease: "power2.out" });
+      },
+      onLeaveBack: () => {
+        // 向下滚离第二页（回到第一页）：让第一页内容回来
+        gsap.to(page1Content, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" });
+      },
+    });
+
+    // 向上滚回第一页（从第二页滚回）：让第一页内容从下方出现
+    ScrollTrigger.create({
+      trigger: ".page-1",
+      start: "bottom 80%",
+      onLeaveBack: () => {
+        gsap.fromTo(
+          page1Content,
+          { y: 60, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }
+        );
+      },
+    });
+
+    initLoopScroll();
+  }
+
+  /**
+   * 循环滚动：让两页构成无缝循环环
+   *
+   * 行为：
+   * - 在第二页底部继续向下滚 → 第一页从下方"爬"上来（无缝回到第一页顶部）
+   * - 在第一页顶部继续向上滚 → 第二页从上方"压"下来（无缝进入第二页底部）
+   *
+   * 实现机制：
+   * - ScrollSmoother 接管滚动后，window.scrollY 永远是 0，需用 smoother.scrollTop()
+   * - 监听 wheel 事件：当滚到底部且 wheel delta > 0，或滚到顶部且 wheel delta < 0 时，触发循环
+   * - 触发后立刻 preventDefault + 跳转，配合 GSAP 淡入淡出掩盖瞬移感
+   */
+  function initLoopScroll() {
+    const smoother = ScrollSmoother.get();
+    if (!smoother) return;
+
+    const page1Content = document.querySelector<HTMLElement>(".page-1 .page-content");
+    const page2Content = document.querySelector<HTMLElement>(".page-2 .page-content");
+    if (!page1Content || !page2Content) return;
+
+    let isLooping = false;
+    const JUMP_DURATION = 0.6;
+    const SCROLL_TOLERANCE = 4; // 距离边界的容差像素
+
+    // 准确获取最大滚动：直接读 scroller 内层元素的可滚动距离
+    function getContentMax(): number {
+      // ScrollSmoother 接管滚动后，真实滚动由内部 scroller 元素代理
+      // 通过 scroller 的 clientHeight 反推最大可滚动距离
+      const scroller = (smoother as any).scroller as HTMLElement | undefined;
+      const inner = scroller?.firstElementChild as HTMLElement | null;
+      if (inner) {
+        return Math.max(0, inner.scrollHeight - window.innerHeight);
+      }
+      // fallback：文档总高度 - 视口高度
+      return Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    }
+
+    // wheel 事件监听（passive: false 以便 preventDefault）
+    window.addEventListener(
+      "wheel",
+      (e: WheelEvent) => {
+        if (isLooping) {
+          e.preventDefault();
+          return;
+        }
+
+        const y = smoother.scrollTop();
+        const max = getContentMax();
+        const delta = e.deltaY;
+
+        // 向下溢出：第二页底部继续向下 → 回到第一页顶部（第一页从下方出现）
+        if (delta > 0 && y >= max - SCROLL_TOLERANCE) {
+          e.preventDefault();
+          isLooping = true;
+
+          // 第一页内容从下方出现动画
+          gsap.fromTo(
+            page1Content,
+            { y: 80, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              duration: JUMP_DURATION,
+              ease: "power2.out",
+              onComplete: () => gsap.set(page1Content, { clearProps: "all" }),
+            }
+          );
+          // 第二页向上滑出
+          gsap.to(page2Content, {
+            y: -60,
+            opacity: 0,
+            duration: JUMP_DURATION,
+            ease: "power2.in",
+          });
+
+          // 立刻跳到顶部（false = 无动画瞬移）
+          smoother.scrollTo(0, false);
+
+          setTimeout(() => {
+            isLooping = false;
+          }, JUMP_DURATION * 1000);
+        }
+        // 向上溢出：第一页顶部继续向上 → 进入第二页底部（第二页从上方出现）
+        else if (delta < 0 && y <= SCROLL_TOLERANCE) {
+          e.preventDefault();
+          isLooping = true;
+
+          // 第二页从上方出现
+          gsap.fromTo(
+            page2Content,
+            { y: -60, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              duration: JUMP_DURATION,
+              ease: "power2.out",
+              onComplete: () => gsap.set(page2Content, { clearProps: "all" }),
+            }
+          );
+          // 第一页向下滑出
+          gsap.to(page1Content, {
+            y: 80,
+            opacity: 0,
+            duration: JUMP_DURATION,
+            ease: "power2.in",
+          });
+
+          // 立刻跳到底部
+          smoother.scrollTo(getContentMax(), false);
+
+          setTimeout(() => {
+            isLooping = false;
+          }, JUMP_DURATION * 1000);
+        }
+      },
+      { passive: false }
+    );
   }
 
   // 页面加载完成后初始化
