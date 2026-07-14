@@ -27,7 +27,7 @@ export const siteConfig: SiteConfig = {
 	// 主页布局模式
 	// 选项："vertical" | "horizontal"
 	// 由 src/pages/index.astro 读取并切换到对应的页面文件
-	homeLayout: "horizontal",
+	homeLayout: "vertical",
 
 	// 主题模式
 	// 选项："light" | "dark" | "system"

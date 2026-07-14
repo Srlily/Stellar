@@ -10,13 +10,22 @@ import Footer from "@/components/Footer.astro";
 ---
 
 <Layout title="首页 · Stellar">
-	<section class="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-12 px-6 py-16">
-		<Header />
-		<Avatar />
-		<SocialLinks class="-mt-4" />
-		<TimeWeatherCards />
-		<NavCards />
-		<SkillsProjects />
+	{/* 第一页：头部 + 头像 + 社交链接 + 时间/天气 + 导航卡片 */}
+	<section class="page page-1">
+		<div class="page-content mx-auto flex w-full max-w-5xl flex-col gap-12 px-6 py-16">
+			<Header />
+			<Avatar />
+			<SocialLinks class="-mt-4" />
+			<TimeWeatherCards />
+			<NavCards />
+		</div>
 	</section>
-	<Footer slot="footer" />
+
+	{/* 第二页：技能与项目 + Footer */}
+	<section class="page page-2">
+		<div class="page-content mx-auto flex w-full max-w-5xl flex-1 flex-col gap-12 px-6 py-16">
+			<SkillsProjects />
+		</div>
+		<Footer />
+	</section>
 </Layout>
