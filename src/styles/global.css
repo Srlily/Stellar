@@ -258,21 +258,28 @@ html.dark .glass-tile [data-icon-container] {
 /* ========== 玻璃主题下：增强页面级文本对比度 ==========
  *  SiteInfo / Avatar 标题等不在 glass-card 容器内，但因背景变亮/变暗，
  *  原 Tailwind 颜色 slate-700/300 对比度不足。这里强制使用更深的浅色 / 更亮的暗色。
+ *  关键：用 :not(.dark) / .dark 区分，使 light/dark 切换时颜色跟着切换。
  */
-html.glass-theme .text-slate-700,
-html.glass-theme .text-slate-600 {
+html.glass-theme:not(.dark) .text-slate-700,
+html.glass-theme:not(.dark) .text-slate-600,
+html.glass-theme:not(.dark) .text-slate-500 {
 	color: rgb(15, 23, 42) !important;
 }
+html.glass-theme:not(.dark) .text-slate-300,
+html.glass-theme:not(.dark) .text-slate-400 {
+	color: rgb(51, 65, 85) !important;
+}
 html.glass-theme.dark .text-slate-700,
-html.glass-theme.dark .text-slate-600 {
+html.glass-theme.dark .text-slate-600,
+html.glass-theme.dark .text-slate-500 {
 	color: rgb(241, 245, 249) !important;
 }
 html.glass-theme.dark .text-slate-300,
 html.glass-theme.dark .text-slate-400 {
 	color: rgb(226, 232, 240) !important;
 }
-html.glass-theme #typewriter-text,
-html.glass-theme #typewriter-cursor {
+html.glass-theme:not(.dark) #typewriter-text,
+html.glass-theme:not(.dark) #typewriter-cursor {
 	color: rgb(15, 23, 42);
 }
 html.glass-theme.dark #typewriter-text,
@@ -281,17 +288,21 @@ html.glass-theme.dark #typewriter-cursor {
 }
 
 /* SiteInfo 容器：增加底部微弱阴影，避免浅背景上文字"漂浮" */
-html.glass-theme #site-info {
+html.glass-theme:not(.dark) #site-info {
 	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 html.glass-theme.dark #site-info {
 	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Avatar 标题：玻璃主题下加深，避免被背景图冲淡 */
-html.glass-theme h1.text-slate-900 {
+/* Avatar 标题：玻璃主题下加深/加亮，避免被背景图冲淡
+ * 关键：仅在"玻璃主题 + 对应 light/dark 模式"下覆盖，使 h1 能正常响应 light/dark 切换。
+ */
+html.glass-theme:not(.dark) h1.text-slate-900,
+html.glass-theme:not(.dark) h1.dark\:text-slate-100 {
 	color: rgb(15, 23, 42) !important;
 }
-html.glass-theme.dark h1.text-slate-100 {
+html.glass-theme.dark h1.text-slate-900,
+html.glass-theme.dark h1.dark\:text-slate-100 {
 	color: rgb(248, 250, 252) !important;
 }
