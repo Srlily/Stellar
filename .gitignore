@@ -63,3 +63,14 @@ Desktop.ini
 # =========================
 # TypeScript 增量编译缓存
 *.tsbuildinfo
+
+# =========================
+# 临时调试日志
+# =========================
+# astro check / git 操作产生的临时日志
+*.log
+merge.log
+pull.log
+before.log
+after.log
+astro_check.log

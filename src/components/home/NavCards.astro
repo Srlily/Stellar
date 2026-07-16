@@ -163,12 +163,25 @@ const hasMore = modalCards.length > 0;
 							target={card.url.startsWith("/") ? "_self" : "_blank"}
 							rel={card.url.startsWith("/") ? "" : "noopener noreferrer"}
 							class:list={[
-								"group/card relative flex items-center gap-3 overflow-hidden border transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
+								"nav-card group/card relative flex items-center gap-3 overflow-hidden border transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
 								glassCardClass
 									|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400",
 							]}
 							style={`padding: ${cardPadding}px; border-radius: ${cardRounded}px;${cardMinWidth ? ` min-width: ${cardMinWidth}px;` : ""}`}
 						>
+=======
+						href={card.url}
+						target={card.url.startsWith("/") ? "_self" : "_blank"}
+						rel={card.url.startsWith("/") ? "" : "noopener noreferrer"}
+						class:list={[
+							"nav-card group/card relative flex items-center gap-3 overflow-hidden border transition-colors duration-300 hover:border-primary-400",
+							glassEnabled
+								? "border-white/20 bg-white/10 backdrop-blur-xl"
+								: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400",
+						]}
+						style={`padding: ${cardPadding}px; border-radius: ${cardRounded}px;${cardMinWidth ? ` min-width: ${cardMinWidth}px;` : ""}`}
+					>
+>>>>>>> origin/dev
 							{/* 图标/图片区域 */}
 							<div class:list={[
 								"flex shrink-0 items-center justify-center overflow-hidden rounded-xl",
@@ -234,7 +247,7 @@ const hasMore = modalCards.length > 0;
 							</div>
 
 							{/* 箭头图标 */}
-							<div class="shrink-0 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100">
+							<div class="nav-card-arrow shrink-0 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100">
 								<Icon
 									name="material-symbols:arrow-forward-rounded"
 									size="1rem"
@@ -250,7 +263,7 @@ const hasMore = modalCards.length > 0;
 						<button
 							type="button"
 							class:list={[
-								"group/card relative flex w-full items-center gap-3 overflow-hidden border transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 cursor-pointer",
+								"nav-card group/card relative flex w-full items-center gap-3 overflow-hidden border transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 cursor-pointer",
 								glassCardClass
 									|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400",
 							]}
@@ -320,7 +333,7 @@ const hasMore = modalCards.length > 0;
 								target={card.url.startsWith("/") ? "_self" : "_blank"}
 								rel={card.url.startsWith("/") ? "" : "noopener noreferrer"}
 								class:list={[
-									"group/card relative flex items-center gap-3 overflow-hidden rounded-xl border p-3 transition-all duration-200 hover:scale-105 hover:border-primary-400 hover:shadow-md",
+									"nav-modal-card group/card relative flex items-center gap-3 overflow-hidden rounded-xl border p-3 transition-colors duration-200 hover:border-primary-400",
 									glassEnabled
 										? "border-white/20 bg-white/30"
 										: "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400",
@@ -380,7 +393,7 @@ const hasMore = modalCards.length > 0;
 										</span>
 									)}
 								</div>
-								<div class="shrink-0 opacity-0 transition-opacity duration-200 group-hover/card:opacity-100">
+								<div class="nav-modal-card-arrow shrink-0 opacity-0 transition-opacity duration-200 group-hover/card:opacity-100">
 									<Icon name="material-symbols:arrow-forward-rounded" size={`${iconSize * MODAL_ICON_SCALE * ARROW_ICON_SCALE}px`} />
 								</div>
 							</a>
@@ -446,3 +459,32 @@ const hasMore = modalCards.length > 0;
 		)}
 	</>
 )}
+
+<script>
+	import { initCardHover } from "@/utils/gsap";
+
+	// 导航卡片的 GSAP 悬停动画（与时间/天气卡片同款）
+	initCardHover([
+		{
+			selector: ".nav-card",
+			// 链接小图标：轻微旋转放大
+			iconAnim: { rotate: 12, scale: 1.15 },
+			// 标题：轻微放大
+			contentAnim: { scale: 1.05 },
+			// 尾部箭头：右移并淡入
+			arrowSelector: ".nav-card-arrow",
+		},
+		{
+			selector: "#nav-cards-more-btn",
+			// "查看更多" 的 + 图标：旋转 90° 变 ×
+			iconAnim: { rotate: 90, scale: 1.15 },
+			contentAnim: { scale: 1.05 },
+		},
+		{
+			selector: ".nav-modal-card",
+			iconAnim: { rotate: 12, scale: 1.15 },
+			contentAnim: { scale: 1.05 },
+			arrowSelector: ".nav-modal-card-arrow",
+		},
+	]);
+</script>

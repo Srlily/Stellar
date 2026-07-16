@@ -292,20 +292,9 @@ const projectGridClass = getProjectGridClass(projectColumns);
 						skillTab.querySelector('svg').style.color = inactiveColor;
 						skillContent.classList.add('hidden');
 						projectContent.classList.remove('hidden');
-						// 切换到项目选项卡时触发动画观察和标签溢出检测
+						// 切换到项目选项卡时触发GSAP滚动动画和标签溢出检测
 						requestAnimationFrame(function() {
-							var els = projectContent.querySelectorAll('.animate-on-scroll:not(.is-visible)');
-							if (els.length) {
-								var obs = new IntersectionObserver(function(entries) {
-									entries.forEach(function(e) {
-										if (e.isIntersecting) {
-											e.target.classList.add('is-visible');
-											obs.unobserve(e.target);
-										}
-									});
-								}, { threshold: 0.1 });
-								els.forEach(function(el) { obs.observe(el); });
-							}
+							// 触发标签溢出检测
 							document.dispatchEvent(new CustomEvent('check-tag-overflow'));
 						});
 					}
