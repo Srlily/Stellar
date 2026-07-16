@@ -8,6 +8,7 @@ import { siteConfig } from "@/config/siteConfig";
 import Icon from "@/components/Icon.astro";
 
 const glassEnabled = siteConfig.glassTheme?.enable ?? false;
+const glassCardClass = glassEnabled ? "glass-card" : "";
 
 interface Props {
 	class?: string;
@@ -78,9 +79,8 @@ const responsiveStyle = `
 {isEnabled && validSkills.length > 0 && (
 	<section class:list={[
 		"rounded-2xl border p-6",
-		glassEnabled
-			? "border-white/20 bg-white/10 backdrop-blur-xl"
-			: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
+		glassCardClass
+			|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
 		className,
 	]}>
 		<style is:inline set:html={responsiveStyle}></style>

@@ -10,23 +10,24 @@ declare global {
 	interface Window {
 		__theme: {
 			/**
-			 * 获取当前主题模式
-			 * @returns "light" | "dark" | "system"
+			 * 获取当前主题模式（light/dark/system）
 			 */
 			getMode: () => ThemeMode;
 			/**
 			 * 设置主题模式
-			 * @param mode 主题模式 "light" | "dark" | "system"
 			 */
 			setMode: (mode: ThemeMode) => void;
 			/**
 			 * 循环切换主题模式：light -> dark -> system -> light
-			 * @returns 切换后的主题模式
 			 */
 			cycleMode: () => ThemeMode;
 			/**
-			 * 液态玻璃是否启用（只读，由 siteConfig.glassTheme.enable 决定）
-			 * 启用后深浅色切换失效且不显示切换按钮
+			 * 获取解析后的实际主题（light | dark），把 system 解析为具体值
+			 */
+			getResolved: () => "light" | "dark";
+			/**
+			 * 液态玻璃视觉是否启用（只读，由 siteConfig.glassTheme.enable 决定）
+			 * 现在与 light/dark 叠加生效，不再锁定主题切换
 			 */
 			glassEnabled: boolean;
 		};

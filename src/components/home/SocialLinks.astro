@@ -8,6 +8,7 @@ import { siteConfig } from "@/config/siteConfig";
 import Icon from "@/components/Icon.astro";
 
 const glassEnabled = siteConfig.glassTheme?.enable ?? false;
+const glassTileClass = glassEnabled ? "glass-tile" : "";
 
 // 社交平台配置
 const platformConfig: Record<
@@ -107,9 +108,8 @@ const validLinks = links.filter((link) => link.url && link.url.trim() !== "");
 					rel="noopener noreferrer"
 					class:list={[
 					"group inline-flex h-11 w-11 items-center justify-center rounded-full border",
-					glassEnabled
-						? "border-white/20 bg-white/10 backdrop-blur-xl"
-						: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
+					glassTileClass
+						|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
 					"text-slate-600 transition-all duration-200",
 					"hover:scale-110 hover:border-primary-400 hover:bg-primary-50 hover:text-primary-600",
 					"dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300",

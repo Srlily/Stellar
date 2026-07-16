@@ -18,8 +18,20 @@ const {
 // 从 siteConfig 获取默认主题模式，确保类型为字符串
 const defaultTheme: string = (siteConfig.theme as string) || SYSTEM_MODE;
 
-// 液态玻璃是否启用（独立配置，不在主题循环中）
+// 液态玻璃视觉是否启用（与 light/dark 叠加，不再作为独立模式）
 const glassEnabled = siteConfig.glassTheme?.enable ?? false;
+
+// 序列化玻璃参数供客户端运行时使用（解决 SVG 滤镜需要 React DOM 的问题，改为 CSS 变量驱动）
+const glassParams = glassEnabled
+	? {
+			refractionMode: siteConfig.glassTheme?.refractionMode ?? "standard",
+			displacementScale: siteConfig.glassTheme?.displacementScale ?? 70,
+			blurAmount: siteConfig.glassTheme?.blurAmount ?? 0.0625,
+			saturation: siteConfig.glassTheme?.saturation ?? 140,
+			aberrationIntensity: siteConfig.glassTheme?.aberrationIntensity ?? 2,
+			cornerRadius: siteConfig.glassTheme?.cornerRadius ?? 24,
+		}
+	: null;
 
 // 获取背景对齐方式
 const align = backgroundConfig.align ?? "center";
@@ -35,9 +47,9 @@ const align = backgroundConfig.align ?? "center";
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
-		<script is:inline define:vars={{ LIGHT_MODE, DARK_MODE, SYSTEM_MODE, defaultTheme, glassEnabled }}>
+		<script is:inline define:vars={{ LIGHT_MODE, DARK_MODE, SYSTEM_MODE, defaultTheme, glassEnabled, glassParams }}>
 			// 主题模式：light / dark / system（三种循环）
-			// glassEnabled 为独立配置，启用后深浅色切换失效
+			// 玻璃视觉作为叠加层，与 light/dark 同时生效，不再强制锁定
 			(function () {
 				var STORAGE_KEY = 'theme';
 				var MODES = [LIGHT_MODE, DARK_MODE, SYSTEM_MODE];
@@ -60,19 +72,21 @@ const align = backgroundConfig.align ?? "center";
 					return LIGHT_MODE;
 				}
 
+				function applyGlassParams(params) {
+					if (!params) return;
+					var root = document.documentElement.style;
+					root.setProperty('--glass-mode', params.refractionMode);
+					root.setProperty('--glass-displacement', String(params.displacementScale));
+					root.setProperty('--glass-blur-amount', String(params.blurAmount));
+					root.setProperty('--glass-saturation', String(params.saturation));
+					root.setProperty('--glass-aberration', String(params.aberrationIntensity));
+					root.setProperty('--glass-radius', params.cornerRadius + 'px');
+				}
+
 				function applyTheme(mode) {
 					var root = document.documentElement;
 
-					// glass 模式：添加 glass-theme 类，强制使用亮色底层
-					if (glassEnabled) {
-						root.classList.add('glass-theme');
-						root.classList.remove('dark');
-						root.dataset.theme = 'glass';
-						return;
-					}
-
-					// 非 glass 模式：正常应用深浅色
-					root.classList.remove('glass-theme');
+					// 解析后的实际主题（light / dark）始终应用，与玻璃叠加
 					var resolved = resolveTheme(mode);
 					if (resolved === DARK_MODE) {
 						root.classList.add('dark');
@@ -80,6 +94,14 @@ const align = backgroundConfig.align ?? "center";
 						root.classList.remove('dark');
 					}
 					root.dataset.theme = resolved;
+
+					// 玻璃视觉作为独立 class 标记，便于 CSS 选择器处理
+					if (glassEnabled) {
+						root.classList.add('glass-theme');
+						applyGlassParams(glassParams);
+					} else {
+						root.classList.remove('glass-theme');
+					}
 				}
 
 				// 首次加载：立即应用，避免主题闪烁
@@ -122,8 +144,12 @@ const align = backgroundConfig.align ?? "center";
 						document.dispatchEvent(new CustomEvent("theme-change", { detail: { mode: next } }));
 						return next;
 					},
-					// glass 是否启用（只读，由配置决定）
+					// 玻璃是否启用（只读，由配置决定）
 					glassEnabled: glassEnabled,
+					// 当前解析后的主题（light | dark），便于组件响应
+					getResolved: function () {
+						return resolveTheme(getStoredMode());
+					},
 				};
 
 				// 启用过渡

@@ -1,9 +1,13 @@
 ---
 import { backgroundConfig } from "@/config/backgroundConfig";
+import { siteConfig } from "@/config/siteConfig";
 import type { BackgroundLoadingEffect } from "@/types/config";
 
 const { mode, src, overlay, fullscreen } = backgroundConfig;
 const loadingEffect: BackgroundLoadingEffect = backgroundConfig.loadingEffect ?? "shimmer";
+
+// 玻璃视觉启用状态（仅作标记，不影响主题本身）
+const glassEnabled = siteConfig.glassTheme?.enable ?? false;
 
 // 处理图片数组，获取随机图片
 function getRandomImage(images: string | string[]): string {
@@ -46,6 +50,7 @@ const fullscreenPosition = fullscreen.position ?? "center";
 		class="background-wallpaper"
 		style={`--bg-position: ${fullscreenPosition};`}
 		data-effect={loadingEffect}
+		data-glass-source={glassEnabled ? "true" : undefined}
 	>
 		{loadingEffect !== "none" && <div class="background-loader"></div>}
 		<img
@@ -69,6 +74,7 @@ const fullscreenPosition = fullscreen.position ?? "center";
 		id="background-wallpaper"
 		class="background-wallpaper"
 		data-effect={loadingEffect}
+		data-glass-source={glassEnabled ? "true" : undefined}
 	>
 		{loadingEffect !== "none" && <div class="background-loader"></div>}
 		<div

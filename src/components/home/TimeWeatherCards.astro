@@ -12,6 +12,7 @@ import { siteConfig } from "@/config/siteConfig";
 import Icon from "@/components/Icon.astro";
 
 const glassEnabled = siteConfig.glassTheme?.enable ?? false;
+const glassCardClass = glassEnabled ? "glass-card" : "";
 const tw = homeConfig.timeWeather;
 const isEnabled = tw?.enable !== false;
 
@@ -50,9 +51,8 @@ const textAlign = align === "center" ? "text-center" : align === "right" ? "text
 				"transition-all duration-300",
 				"hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
 				"dark:hover:border-primary-400",
-				glassEnabled
-					? "border-white/20 bg-white/10 backdrop-blur-xl"
-					: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
+				glassCardClass
+					|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
 			]}>
 				{/* 标签行 */}
 				{showLabels && (timeEnabled || weatherEnabled) && (
@@ -129,9 +129,8 @@ const textAlign = align === "center" ? "text-center" : align === "right" ? "text
 					"transition-all duration-300",
 					"hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
 					"dark:hover:border-primary-400",
-					glassEnabled
-						? "border-white/20 bg-white/10 backdrop-blur-xl"
-						: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
+					glassCardClass
+						|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
 					"animate-on-scroll anim-fade-up stagger-1",
 				]}>
 					{showLabels && (
@@ -160,9 +159,8 @@ const textAlign = align === "center" ? "text-center" : align === "right" ? "text
 					"transition-all duration-300",
 					"hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
 					"dark:hover:border-primary-400",
-					glassEnabled
-						? "border-white/20 bg-white/10 backdrop-blur-xl"
-						: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
+					glassCardClass
+						|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
 					"animate-on-scroll anim-fade-up stagger-2",
 				]}>
 					{showLabels && (

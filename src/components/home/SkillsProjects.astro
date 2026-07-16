@@ -7,8 +7,10 @@ import { homeConfig } from "@/config/homeConfig";
 import { siteConfig } from "@/config/siteConfig";
 import Icon from "@/components/Icon.astro";
 
-// 液态玻璃模式下使用透明背景
+// 液态玻璃视觉是否启用（与 light/dark 叠加）
 const glassEnabled = siteConfig.glassTheme?.enable ?? false;
+const glassCardClass = glassEnabled ? "glass-card" : "";
+const glassTileClass = glassEnabled ? "glass-tile" : "";
 
 interface Props {
 	class?: string;
@@ -89,9 +91,8 @@ const projectGridClass = getProjectGridClass(projectColumns);
 {showTabs && (
 	<section class:list={[
 		"rounded-2xl border p-6 animate-on-scroll anim-fade-up stagger-5",
-		glassEnabled
-			? "border-white/15 bg-white/5 backdrop-blur-xl"
-			: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
+		glassCardClass
+			|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
 		className,
 	]}>
 		{/* 选项卡标题 */}
@@ -172,9 +173,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 						{/* 项目图片或图标 */}
 						<div class:list={[
 							"relative h-16 w-full overflow-hidden rounded-lg",
-							glassEnabled
-								? "bg-white/10"
-								: "bg-slate-100 dark:bg-slate-600",
+							glassTileClass || "bg-slate-100 dark:bg-slate-600",
 						]}>
 							{project.image ? (
 								<img
@@ -241,9 +240,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 					>
 						<div class:list={[
 							"relative h-16 w-full overflow-hidden rounded-lg",
-							glassEnabled
-								? "bg-white/10"
-								: "bg-slate-100 dark:bg-slate-600",
+							glassTileClass || "bg-slate-100 dark:bg-slate-600",
 						]}>
 							<div class="flex h-full w-full items-center justify-center">
 								<Icon name="material-symbols:add-rounded" size={`${projectIconSize}px`} class="text-slate-400" />
@@ -358,9 +355,8 @@ const projectGridClass = getProjectGridClass(projectColumns);
 {onlySkills && (
 	<section class:list={[
 		"rounded-2xl border p-6 animate-on-scroll anim-fade-up stagger-5",
-		glassEnabled
-			? "border-white/15 bg-white/5 backdrop-blur-xl"
-			: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
+		glassCardClass
+			|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
 		className,
 	]}>
 		{/* 头部 */}
@@ -400,9 +396,8 @@ const projectGridClass = getProjectGridClass(projectColumns);
 {onlyProjects && (
 	<section class:list={[
 		"rounded-2xl border p-6 animate-on-scroll anim-fade-up stagger-5",
-		glassEnabled
-			? "border-white/15 bg-white/5 backdrop-blur-xl"
-			: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
+		glassCardClass
+			|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
 		className,
 	]}>
 		{/* 头部 */}
@@ -433,9 +428,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 						{/* 项目图片或图标 */}
 						<div class:list={[
 							"relative h-20 w-full overflow-hidden rounded-lg",
-							glassEnabled
-								? "bg-white/10"
-								: "bg-slate-100 dark:bg-slate-600",
+							glassTileClass || "bg-slate-100 dark:bg-slate-600",
 						]}>
 							{project.image ? (
 								<img
@@ -502,9 +495,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 					>
 						<div class:list={[
 							"relative h-20 w-full overflow-hidden rounded-lg",
-							glassEnabled
-								? "bg-white/10"
-								: "bg-slate-100 dark:bg-slate-600",
+							glassTileClass || "bg-slate-100 dark:bg-slate-600",
 						]}>
 							<div class="flex h-full w-full items-center justify-center">
 								<Icon name="material-symbols:add-rounded" size={`${projectIconSize}px`} class="text-slate-400" />

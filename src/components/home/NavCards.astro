@@ -14,8 +14,12 @@ import { homeConfig } from "@/config/homeConfig";
 import { siteConfig } from "@/config/siteConfig";
 import Icon from "@/components/Icon.astro";
 
-// 液态玻璃模式下使用透明背景
+// 液态玻璃视觉是否启用（与 light/dark 叠加，而非独立模式）
 const glassEnabled = siteConfig.glassTheme?.enable ?? false;
+// 玻璃统一卡片类名
+const glassCardClass = glassEnabled ? "glass-card" : "";
+// 玻璃统一图标容器类名
+const glassTileClass = glassEnabled ? "glass-tile" : "";
 
 interface Props {
 	class?: string;
@@ -160,18 +164,16 @@ const hasMore = modalCards.length > 0;
 							rel={card.url.startsWith("/") ? "" : "noopener noreferrer"}
 							class:list={[
 								"group/card relative flex items-center gap-3 overflow-hidden border transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
-								glassEnabled
-									? "border-white/20 bg-white/10 backdrop-blur-xl"
-									: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400",
+								glassCardClass
+									|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400",
 							]}
 							style={`padding: ${cardPadding}px; border-radius: ${cardRounded}px;${cardMinWidth ? ` min-width: ${cardMinWidth}px;` : ""}`}
 						>
 							{/* 图标/图片区域 */}
 							<div class:list={[
 								"flex shrink-0 items-center justify-center overflow-hidden rounded-xl",
-								glassEnabled
-									? "bg-white/10"
-									: "bg-slate-100 dark:bg-slate-700",
+								glassTileClass
+									|| "bg-slate-100 dark:bg-slate-700",
 							]}
 							style={`width: ${iconBoxSize}px; height: ${iconBoxSize}px;`}
 							>
@@ -249,9 +251,8 @@ const hasMore = modalCards.length > 0;
 							type="button"
 							class:list={[
 								"group/card relative flex w-full items-center gap-3 overflow-hidden border transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20 cursor-pointer",
-								glassEnabled
-									? "border-white/20 bg-white/10 backdrop-blur-xl"
-									: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400",
+								glassCardClass
+									|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400",
 							]}
 							style={`padding: ${cardPadding}px; border-radius: ${cardRounded}px;${cardMinWidth ? ` min-width: ${cardMinWidth}px;` : ""}`}
 							id="nav-cards-more-btn"
@@ -259,9 +260,8 @@ const hasMore = modalCards.length > 0;
 						>
 							<div class:list={[
 								"flex shrink-0 items-center justify-center overflow-hidden rounded-xl",
-								glassEnabled
-									? "bg-white/10"
-									: "bg-slate-100 dark:bg-slate-700",
+								glassTileClass
+									|| "bg-slate-100 dark:bg-slate-700",
 							]}
 							style={`width: ${iconBoxSize}px; height: ${iconBoxSize}px;`}
 							>
@@ -294,7 +294,7 @@ const hasMore = modalCards.length > 0;
 				<div class:list={[
 					"modal-content max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border p-6 shadow-xl",
 					glassEnabled
-						? "border-white/30 bg-white/20 backdrop-blur-2xl shadow-black/10"
+						? "glass-card border-white/30 bg-white/20 backdrop-blur-2xl shadow-black/10"
 						: "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800",
 				]}>
 					{/* 弹窗头部 */}
@@ -328,9 +328,7 @@ const hasMore = modalCards.length > 0;
 							>
 								<div class:list={[
 									"flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg",
-									glassEnabled
-										? "bg-white/10"
-										: "bg-slate-100 dark:bg-slate-600",
+									glassTileClass || "bg-slate-100 dark:bg-slate-600",
 								]}>
 									{hasValidImage(card) ? (
 										<img

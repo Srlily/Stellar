@@ -2,7 +2,7 @@
 /**
  * 主题切换组件
  * 支持 light / dark / system 三种模式循环切换
- * 当 glassTheme.enable 为 true 时，隐藏此组件
+ * 玻璃视觉启用时仍然显示，可以与 light/dark 自由组合
  */
 import Icon from "./Icon.astro";
 ---
@@ -62,13 +62,8 @@ import Icon from "./Icon.astro";
 		const toggle = document.getElementById("theme-toggle");
 		if (!toggle) return;
 
-		// glass 启用时隐藏整个按钮
-		if (window.__theme?.glassEnabled) {
-			toggle.classList.add("hidden");
-			return;
-		} else {
-			toggle.classList.remove("hidden");
-		}
+		// 玻璃视觉启用时按钮始终显示，与 light/dark 自由组合
+		toggle.classList.remove("hidden");
 
 		// 初始化图标
 		if (window.__theme) {

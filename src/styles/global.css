@@ -156,36 +156,127 @@ main.align-center-center {
 	justify-content: center;
 }
 
-/* ========== 液态玻璃主题 ========== */
+/* ========== 液态玻璃视觉（与 light/dark 叠加） ========== */
 
-/* 液态玻璃 CSS 变量 */
+/* 液态玻璃 CSS 变量（默认值，可由 Layout.astro 中的内联脚本覆盖） */
 :root {
-	--glass-blur: 6px;
-	--glass-saturation: 140%;
+	/* 折射模式: standard | polar | prominent */
+	--glass-mode: standard;
+	/* 位移强度，0-200 */
+	--glass-displacement: 70;
+	/* 模糊程度，0-1 */
+	--glass-blur-amount: 0.0625;
+	/* 饱和度，100-300 */
+	--glass-saturation: 140;
+	/* 色散强度，0-20 */
+	--glass-aberration: 2;
+	/* 卡片圆角，0-999 */
 	--glass-radius: 24px;
-	--glass-bg: rgba(255, 255, 255, 0.15);
-	--glass-border: rgba(255, 255, 255, 0.25);
-	--glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-	--glass-highlight: linear-gradient(
-		135deg,
-		rgba(255, 255, 255, 0) 0%,
-		rgba(255, 255, 255, 0.12) 33%,
-		rgba(255, 255, 255, 0.3) 66%,
-		rgba(255, 255, 255, 0) 100%
-	);
+
+	/* 卡片相关（基础值，会随 light/dark 变化） */
+	--glass-card-bg: rgba(255, 255, 255, 0.55);
+	--glass-card-border: rgba(255, 255, 255, 0.45);
+	--glass-card-text: rgb(15, 23, 42);
+	--glass-card-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+
+	/* 计算后的 backdrop-filter（依据变量动态生成） */
+	--glass-backdrop-filter: blur(calc(4px + var(--glass-blur-amount) * 32px)) saturate(var(--glass-saturation)%);
+	--glass-card-backdrop-filter: blur(calc(8px + var(--glass-blur-amount) * 24px)) saturate(var(--glass-saturation)%);
 }
 
-/* 液态玻璃下强制使用 body 背景图，覆盖内联背景色 */
+/* 暗色主题下的玻璃色调（与 .dark 共存） */
+html.dark {
+	--glass-card-bg: rgba(15, 23, 42, 0.55);
+	--glass-card-border: rgba(148, 163, 184, 0.25);
+	--glass-card-text: rgb(226, 232, 240);
+	--glass-card-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* ========== 玻璃启用时的页面底色（透明，露出背景图） ========== */
+
 html.glass-theme body,
 html.glass-theme main {
 	background-color: transparent !important;
 }
 
-/* 玻璃主题过渡动画 */
+/* 玻璃主题过渡动画（叠加在主题过渡之上） */
 html.glass-theme *,
 html.glass-theme *::before,
 html.glass-theme *::after {
-	transition-property: background-color, background, border-color, box-shadow, transform, opacity;
+	transition-property: background-color, background, border-color, box-shadow, transform, opacity, backdrop-filter;
 	transition-duration: 0.3s;
 	transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ========== 玻璃风格卡片基础类（被各 home 组件按需添加） ========== */
+
+/* 主卡片容器：玻璃质感背景 + 模糊 + 边框高光 + 阴影 */
+.glass-card {
+	position: relative;
+	background: var(--glass-card-bg);
+	border: 1px solid var(--glass-card-border);
+	border-radius: var(--glass-radius);
+	box-shadow: var(--glass-card-shadow);
+	-webkit-backdrop-filter: var(--glass-card-backdrop-filter);
+	backdrop-filter: var(--glass-card-backdrop-filter);
+	color: var(--glass-card-text);
+	overflow: hidden;
+}
+
+/* 玻璃卡片顶部高光（亮边） */
+.glass-card::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	padding: 1px;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0) 0%,
+		rgba(255, 255, 255, 0.25) 33%,
+		rgba(255, 255, 255, 0.45) 66%,
+		rgba(255, 255, 255, 0) 100%
+	);
+	-webkit-mask:
+		linear-gradient(#000 0 0) content-box,
+		linear-gradient(#000 0 0);
+	-webkit-mask-composite: xor;
+	mask-composite: exclude;
+	pointer-events: none;
+	mix-blend-mode: overlay;
+	opacity: 0.5;
+}
+
+/* 玻璃图标容器（液体玻璃 React 组件将作为目标使用） */
+.glass-tile {
+	background: rgba(255, 255, 255, 0.12);
+	border: 1px solid rgba(255, 255, 255, 0.25);
+	border-radius: 12px;
+	-webkit-backdrop-filter: blur(8px) saturate(var(--glass-saturation)%);
+	backdrop-filter: blur(8px) saturate(var(--glass-saturation)%);
+}
+html.dark .glass-tile {
+	background: rgba(255, 255, 255, 0.06);
+	border-color: rgba(148, 163, 184, 0.2);
+}
+
+/* 在 light/dark 模式下复用 Tailwind 的 dark: 变体支持玻璃卡片内的子元素 */
+.glass-card .text-slate-700,
+.glass-card .text-slate-600,
+.glass-card .text-slate-500,
+.glass-card .text-slate-900 {
+	color: var(--glass-card-text);
+}
+.glass-card .text-slate-400,
+.glass-card .text-slate-300 {
+	color: color-mix(in oklab, var(--glass-card-text) 60%, transparent);
+}
+.glass-card .bg-slate-100,
+.glass-card .bg-slate-50,
+.glass-card .dark\:bg-slate-700\/50 {
+	background: color-mix(in oklab, var(--glass-card-text) 8%, transparent);
+}
+.glass-card .border-slate-200,
+.glass-card .border-slate-700 {
+	border-color: var(--glass-card-border);
 }

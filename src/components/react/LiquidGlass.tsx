@@ -1,64 +1,110 @@
 /**
  * LiquidGlass 液态玻璃 React 组件
- * 基于 liquid-glass-react 库的实现方法，使用 SVG 位移滤镜 + backdrop-filter 实现
  *
- * 核心原理：
- * 1. SVG feDisplacementMap 对边缘区域产生折射扭曲
- * 2. backdrop-filter: blur() + saturate() 实现玻璃模糊与饱和度增强
- * 3. 色散效果（chromatic aberration）通过 RGB 通道分离实现
- * 4. 径向渐变遮罩控制位移仅在边缘生效，中心保持清晰
+ * 设计目标（重构后）：
+ * 1. 不再作为独立"主题模式"使用，而是叠加在 light/dark 主题上的视觉增强。
+ * 2. 通过 `--glass-*` CSS 变量驱动外观，自动适配 light/dark（见 global.css）。
+ * 3. 当传入 `refraction=true` 时，渲染 SVG feDisplacementMap 滤镜，
+ *    给玻璃容器边缘添加折射扭曲与色散效果；
+ *    关闭时回退到纯 CSS 玻璃外观（性能更好）。
+ *
+ * 使用方式：
+ *   <LiquidGlass>...</LiquidGlass>                          // 纯 CSS 玻璃
+ *   <LiquidGlass refraction cornerRadius={32}>...</LiquidGlass>  // 启用 SVG 折射
  */
-import { type CSSProperties, forwardRef, useId } from "react";
+import * as React from "react";
+import {
+	type CSSProperties,
+	type ReactElement,
+	type ReactNode,
+	forwardRef,
+	useEffect,
+	useId,
+	useState,
+} from "react";
 
 // ==================== 类型定义 ====================
 
 export type GlassRefractionMode = "standard" | "polar" | "prominent";
 
 export interface LiquidGlassProps {
-	children: React.ReactNode;
+	children?: ReactNode;
 	className?: string;
 	style?: CSSProperties;
-	/** 位移强度，控制边缘扭曲程度，0-200 */
+	/** 是否启用 SVG 位移折射（默认 false，使用纯 CSS 玻璃） */
+	refraction?: boolean;
+	/** 折射模式：standard | polar | prominent，默认 standard */
+	refractionMode?: GlassRefractionMode;
+	/** 位移强度，控制边缘扭曲程度，0-200，默认读取 --glass-displacement */
 	displacementScale?: number;
-	/** 背景模糊量，0-1 */
+	/** 背景模糊量，0-1，默认读取 --glass-blur-amount */
 	blurAmount?: number;
-	/** 背景饱和度，100-300 */
+	/** 背景饱和度，100-300，默认读取 --glass-saturation */
 	saturation?: number;
-	/** 色散强度，控制 RGB 通道分离，0-20 */
+	/** 色散强度，0-20，默认读取 --glass-aberration */
 	aberrationIntensity?: number;
-	/** 圆角半径，0-999（999 = 完全圆角） */
+	/** 圆角半径（px），默认读取 --glass-radius */
 	cornerRadius?: number;
 	/** 内边距 */
 	padding?: string;
-	/** 是否处于明亮背景上（自动加深色调） */
+	/** 是否处于明亮背景上（用于加深色调，可由 CSS 变量覆盖） */
 	overLight?: boolean;
-	/** 折射模式 */
-	mode?: GlassRefractionMode;
 	/** 点击事件 */
 	onClick?: () => void;
 }
 
-// ==================== SVG 滤镜组件 ====================
+// ==================== SVG 滤镜组件（仅在 refraction=true 时渲染） ====================
 
-/**
- * GlassFilter：生成 SVG 位移滤镜
- *
- * 工作原理：
- * - feImage 引入位移贴图
- * - 对 R/G/B 三个通道分别做不同强度的 feDisplacementMap，产生色散
- * - 用径向渐变遮罩让位移仅作用于边缘（中心保持原图）
- * - 最终通过 screen 混合模式合成三通道
- */
-const GlassFilter: React.FC<{
+interface FilterEnv {
 	id: string;
 	displacementScale: number;
 	aberrationIntensity: number;
 	width: number;
 	height: number;
 	mode: GlassRefractionMode;
-}> = ({ id, displacementScale, aberrationIntensity, width, height, mode }) => (
+}
+
+const readCssNumber = (name: string, fallback: number): number => {
+	if (typeof window === "undefined") return fallback;
+	const raw = getComputedStyle(document.documentElement).getPropertyValue(name);
+	const n = parseFloat(raw);
+	return Number.isFinite(n) ? n : fallback;
+};
+
+/**
+ * 监测 light/dark 切换，dark 时让折射色散强度更柔和（避免刺眼）。
+ */
+function useAdaptiveAberration(baseIntensity: number): number {
+	const [intensity, setIntensity] = useState(baseIntensity);
+
+	useEffect(() => {
+		const update = () => {
+			const isDark = document.documentElement.classList.contains("dark");
+			// 暗色下降低色散强度，避免亮色边缘在暗背景上过于刺眼
+			setIntensity(isDark ? Math.max(0, baseIntensity * 0.6) : baseIntensity);
+		};
+		update();
+		const obs = new MutationObserver(update);
+		obs.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ["class"],
+		});
+		return () => obs.disconnect();
+	}, [baseIntensity]);
+
+	return intensity;
+}
+
+const GlassFilter = ({
+	id,
+	displacementScale,
+	aberrationIntensity,
+	width,
+	height,
+	mode,
+}: FilterEnv): ReactElement => (
 	<svg
-		style={{ position: "absolute", width, height }}
+		style={{ position: "absolute", width, height, pointerEvents: "none" }}
 		aria-hidden="true"
 	>
 		<defs>
@@ -73,7 +119,7 @@ const GlassFilter: React.FC<{
 				<stop offset="100%" stopColor="white" stopOpacity="1" />
 			</radialGradient>
 
-			{/* 主滤镜 */}
+			{/* 主滤镜：turbulence + displacement + 色散合成 */}
 			<filter
 				id={id}
 				x="-35%"
@@ -82,7 +128,6 @@ const GlassFilter: React.FC<{
 				height="170%"
 				colorInterpolationFilters="sRGB"
 			>
-				{/* 用 feTurbulence 生成程序化位移图案 */}
 				<feTurbulence
 					type={mode === "polar" ? "turbulence" : "fractalNoise"}
 					baseFrequency={mode === "prominent" ? 0.015 : 0.01}
@@ -97,7 +142,6 @@ const GlassFilter: React.FC<{
 					result="GRAY_NOISE"
 				/>
 
-				{/* 边缘强度提取 */}
 				<feColorMatrix
 					in="GRAY_NOISE"
 					type="matrix"
@@ -114,15 +158,9 @@ const GlassFilter: React.FC<{
 					/>
 				</feComponentTransfer>
 
-				{/* 原始未位移图像（用于中心区域） */}
-				<feOffset
-					in="SourceGraphic"
-					dx="0"
-					dy="0"
-					result="CENTER_ORIGINAL"
-				/>
+				<feOffset in="SourceGraphic" dx="0" dy="0" result="CENTER_ORIGINAL" />
 
-				{/* 红色通道位移 */}
+				{/* R 通道 */}
 				<feDisplacementMap
 					in="SourceGraphic"
 					in2="GRAY_NOISE"
@@ -141,7 +179,7 @@ const GlassFilter: React.FC<{
 					result="RED_CHANNEL"
 				/>
 
-				{/* 绿色通道位移（轻微偏移） */}
+				{/* G 通道 */}
 				<feDisplacementMap
 					in="SourceGraphic"
 					in2="GRAY_NOISE"
@@ -160,7 +198,7 @@ const GlassFilter: React.FC<{
 					result="GREEN_CHANNEL"
 				/>
 
-				{/* 蓝色通道位移（更大偏移） */}
+				{/* B 通道 */}
 				<feDisplacementMap
 					in="SourceGraphic"
 					in2="GRAY_NOISE"
@@ -179,7 +217,6 @@ const GlassFilter: React.FC<{
 					result="BLUE_CHANNEL"
 				/>
 
-				{/* 合成三通道（screen 混合模式） */}
 				<feBlend
 					in="GREEN_CHANNEL"
 					in2="BLUE_CHANNEL"
@@ -193,14 +230,12 @@ const GlassFilter: React.FC<{
 					result="RGB_COMBINED"
 				/>
 
-				{/* 轻微模糊色散效果 */}
 				<feGaussianBlur
 					in="RGB_COMBINED"
 					stdDeviation={Math.max(0.1, 0.5 - aberrationIntensity * 0.1)}
 					result="ABERRATED_BLURRED"
 				/>
 
-				{/* 边缘遮罩应用：仅边缘显示色散 */}
 				<feComposite
 					in="ABERRATED_BLURRED"
 					in2="EDGE_MASK"
@@ -208,7 +243,6 @@ const GlassFilter: React.FC<{
 					result="EDGE_ABERRATION"
 				/>
 
-				{/* 反转遮罩：中心区域保持原图 */}
 				<feComponentTransfer in="EDGE_MASK" result="INVERTED_MASK">
 					<feFuncA type="table" tableValues="1 0" />
 				</feComponentTransfer>
@@ -219,7 +253,6 @@ const GlassFilter: React.FC<{
 					result="CENTER_CLEAN"
 				/>
 
-				{/* 合并边缘色散与中心原图 */}
 				<feComposite
 					in="EDGE_ABERRATION"
 					in2="CENTER_CLEAN"
@@ -238,17 +271,18 @@ const LiquidGlass = forwardRef<HTMLDivElement, LiquidGlassProps>(
 			children,
 			className = "",
 			style,
-			displacementScale = 70,
-			blurAmount = 0.0625,
-			saturation = 140,
-			aberrationIntensity = 2,
-			cornerRadius = 24,
+			refraction = false,
+			refractionMode = "standard",
+			displacementScale,
+			blurAmount,
+			saturation,
+			aberrationIntensity,
+			cornerRadius,
 			padding = "24px 32px",
 			overLight = false,
-			mode = "standard",
 			onClick,
 		},
-		ref,
+		ref: React.ForwardedRef<HTMLDivElement>,
 	) => {
 		const filterId = useId();
 
@@ -256,10 +290,46 @@ const LiquidGlass = forwardRef<HTMLDivElement, LiquidGlassProps>(
 			typeof navigator !== "undefined" &&
 			navigator.userAgent.toLowerCase().includes("firefox");
 
+		// 折射参数：未传入时从 CSS 变量读取（实现 light/dark 自适应）
+		const dScale =
+			displacementScale ?? readCssNumber("--glass-displacement", 70);
+		const bAmount = blurAmount ?? readCssNumber("--glass-blur-amount", 0.0625);
+		const sat = saturation ?? readCssNumber("--glass-saturation", 140);
+
+		// 暗色下自动降低色散（避免亮色边缘刺眼）
+		const baseAberration =
+			aberrationIntensity ?? readCssNumber("--glass-aberration", 2);
+		const adaptiveAberration = useAdaptiveAberration(baseAberration);
+
+		// 圆角：未传入时读取 CSS 变量
+		const [radius, setRadius] = useState<number>(cornerRadius ?? 24);
+		useEffect(() => {
+			if (cornerRadius !== undefined) {
+				setRadius(cornerRadius);
+				return;
+			}
+			const update = () => {
+				const v = parseFloat(
+					getComputedStyle(document.documentElement).getPropertyValue(
+						"--glass-radius",
+					),
+				);
+				if (Number.isFinite(v)) setRadius(v);
+			};
+			update();
+			// CSS 变量可能由其它代码改写，这里监听 style 变化
+			const obs = new MutationObserver(update);
+			obs.observe(document.documentElement, {
+				attributes: true,
+				attributeFilter: ["style"],
+			});
+			return () => obs.disconnect();
+		}, [cornerRadius]);
+
 		const backdropStyle: CSSProperties = {
-			filter: isFirefox ? undefined : `url(#${filterId})`,
-			backdropFilter: `blur(${(overLight ? 12 : 4) + blurAmount * 32}px) saturate(${saturation}%)`,
-			WebkitBackdropFilter: `blur(${(overLight ? 12 : 4) + blurAmount * 32}px) saturate(${saturation}%)`,
+			filter: refraction && !isFirefox ? `url(#${filterId})` : undefined,
+			backdropFilter: `blur(${(overLight ? 12 : 4) + bAmount * 32}px) saturate(${sat}%)`,
+			WebkitBackdropFilter: `blur(${(overLight ? 12 : 4) + bAmount * 32}px) saturate(${sat}%)`,
 		};
 
 		return (
@@ -269,19 +339,21 @@ const LiquidGlass = forwardRef<HTMLDivElement, LiquidGlassProps>(
 				style={style}
 				onClick={onClick}
 			>
-				<GlassFilter
-					id={filterId}
-					displacementScale={displacementScale}
-					aberrationIntensity={aberrationIntensity}
-					width={400}
-					height={400}
-					mode={mode}
-				/>
+				{refraction && (
+					<GlassFilter
+						id={filterId}
+						displacementScale={dScale}
+						aberrationIntensity={adaptiveAberration}
+						width={400}
+						height={400}
+						mode={refractionMode}
+					/>
+				)}
 
 				<div
-					className="glass"
+					className="glass glass-card"
 					style={{
-						borderRadius: `${cornerRadius}px`,
+						borderRadius: `${radius}px`,
 						position: "relative",
 						display: "inline-flex",
 						alignItems: "center",
@@ -306,7 +378,7 @@ const LiquidGlass = forwardRef<HTMLDivElement, LiquidGlassProps>(
 
 					{/* 内容层（保持清晰） */}
 					<div
-						className="transition-all duration-150 ease-in-out text-white"
+						className="transition-all duration-150 ease-in-out"
 						style={{
 							position: "relative",
 							zIndex: 1,
@@ -318,73 +390,6 @@ const LiquidGlass = forwardRef<HTMLDivElement, LiquidGlassProps>(
 						{children}
 					</div>
 				</div>
-
-				{/* 边框高光层 1 */}
-				<span
-					style={{
-						position: "absolute",
-						top: "50%",
-						left: "50%",
-						transform: "translate(-50%, -50%)",
-						height: "100%",
-						width: "100%",
-						borderRadius: `${cornerRadius}px`,
-						pointerEvents: "none",
-						mixBlendMode: "screen",
-						opacity: 0.2,
-						padding: "1.5px",
-						WebkitMask:
-							"linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-						WebkitMaskComposite: "xor",
-						maskComposite: "exclude",
-						boxShadow:
-							"0 0 0 0.5px rgba(255, 255, 255, 0.5) inset, 0 1px 3px rgba(255, 255, 255, 0.25) inset, 0 1px 4px rgba(0, 0, 0, 0.35)",
-						background: `linear-gradient(135deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.12) 33%, rgba(255,255,255,0.4) 66%, rgba(255,255,255,0.0) 100%)`,
-					}}
-				/>
-
-				{/* 边框高光层 2（overlay 混合） */}
-				<span
-					style={{
-						position: "absolute",
-						top: "50%",
-						left: "50%",
-						transform: "translate(-50%, -50%)",
-						height: "100%",
-						width: "100%",
-						borderRadius: `${cornerRadius}px`,
-						pointerEvents: "none",
-						mixBlendMode: "overlay",
-						padding: "1.5px",
-						WebkitMask:
-							"linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-						WebkitMaskComposite: "xor",
-						maskComposite: "exclude",
-						boxShadow:
-							"0 0 0 0.5px rgba(255, 255, 255, 0.5) inset, 0 1px 3px rgba(255, 255, 255, 0.25) inset, 0 1px 4px rgba(0, 0, 0, 0.35)",
-						background: `linear-gradient(135deg, rgba(255,255,255,0.0) 0%, rgba(255,255,255,0.32) 33%, rgba(255,255,255,0.6) 66%, rgba(255,255,255,0.0) 100%)`,
-					}}
-				/>
-
-				{/* 悬停高光效果 */}
-				{onClick && (
-					<div
-						style={{
-							position: "absolute",
-							top: "50%",
-							left: "50%",
-							transform: "translate(-50%, -50%)",
-							height: "100%",
-							width: "100%",
-							borderRadius: `${cornerRadius}px`,
-							pointerEvents: "none",
-							transition: "all 0.2s ease-out",
-							backgroundImage:
-								"radial-gradient(circle at 50% 0%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 50%)",
-							mixBlendMode: "overlay",
-						}}
-					/>
-				)}
 			</div>
 		);
 	},
