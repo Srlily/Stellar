@@ -122,7 +122,11 @@ main.align-center-center {
 	--glass-card-bg: rgba(255, 255, 255, 0.55);
 	--glass-card-border: rgba(255, 255, 255, 0.45);
 	--glass-card-text: rgb(15, 23, 42);
+	--glass-card-text-soft: rgb(51, 65, 85);
 	--glass-card-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+	--glass-tile-bg: rgba(255, 255, 255, 0.22);
+	--glass-tile-border: rgba(255, 255, 255, 0.45);
+	--glass-tile-text: rgb(15, 23, 42);
 
 	/* 计算后的 backdrop-filter（依据变量动态生成） */
 	--glass-backdrop-filter: blur(calc(4px + var(--glass-blur-amount) * 32px)) saturate(var(--glass-saturation)%);
@@ -133,8 +137,12 @@ main.align-center-center {
 html.dark {
 	--glass-card-bg: rgba(15, 23, 42, 0.55);
 	--glass-card-border: rgba(148, 163, 184, 0.25);
-	--glass-card-text: rgb(226, 232, 240);
+	--glass-card-text: rgb(241, 245, 249);
+	--glass-card-text-soft: rgb(203, 213, 225);
 	--glass-card-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+	--glass-tile-bg: rgba(255, 255, 255, 0.12);
+	--glass-tile-border: rgba(148, 163, 184, 0.35);
+	--glass-tile-text: rgb(241, 245, 249);
 }
 
 /* ========== 玻璃启用时的页面底色（透明，露出背景图） ========== */
@@ -194,15 +202,16 @@ html.glass-theme *::after {
 
 /* 玻璃图标容器（液体玻璃 React 组件将作为目标使用） */
 .glass-tile {
-	background: rgba(255, 255, 255, 0.12);
-	border: 1px solid rgba(255, 255, 255, 0.25);
+	background: var(--glass-tile-bg);
+	border: 1px solid var(--glass-tile-border);
 	border-radius: 12px;
+	color: var(--glass-tile-text);
 	-webkit-backdrop-filter: blur(8px) saturate(var(--glass-saturation)%);
 	backdrop-filter: blur(8px) saturate(var(--glass-saturation)%);
 }
 html.dark .glass-tile {
-	background: rgba(255, 255, 255, 0.06);
-	border-color: rgba(148, 163, 184, 0.2);
+	background: var(--glass-tile-bg);
+	border-color: var(--glass-tile-border);
 }
 
 /* 在 light/dark 模式下复用 Tailwind 的 dark: 变体支持玻璃卡片内的子元素 */
@@ -214,7 +223,7 @@ html.dark .glass-tile {
 }
 .glass-card .text-slate-400,
 .glass-card .text-slate-300 {
-	color: color-mix(in oklab, var(--glass-card-text) 60%, transparent);
+	color: var(--glass-card-text-soft);
 }
 .glass-card .bg-slate-100,
 .glass-card .bg-slate-50,
@@ -224,4 +233,65 @@ html.dark .glass-tile {
 .glass-card .border-slate-200,
 .glass-card .border-slate-700 {
 	border-color: var(--glass-card-border);
+}
+
+/* ========== 玻璃卡片内 SVG 图标：保证高对比度 ========== */
+.glass-card svg,
+.glass-tile svg,
+.glass-card [data-icon-container],
+.glass-tile [data-icon-container] {
+	color: var(--glass-tile-text);
+}
+html.dark .glass-card svg,
+html.dark .glass-tile svg,
+html.dark .glass-card [data-icon-container],
+html.dark .glass-tile [data-icon-container] {
+	color: var(--glass-tile-text);
+}
+
+/* ========== 玻璃卡片 hover 状态：增强可读性 ========== */
+.glass-card:hover {
+	border-color: color-mix(in oklab, var(--glass-card-text) 20%, transparent);
+	box-shadow: 0 12px 40px color-mix(in oklab, var(--glass-card-text) 12%, transparent);
+}
+
+/* ========== 玻璃主题下：增强页面级文本对比度 ==========
+ *  SiteInfo / Avatar 标题等不在 glass-card 容器内，但因背景变亮/变暗，
+ *  原 Tailwind 颜色 slate-700/300 对比度不足。这里强制使用更深的浅色 / 更亮的暗色。
+ */
+html.glass-theme .text-slate-700,
+html.glass-theme .text-slate-600 {
+	color: rgb(15, 23, 42) !important;
+}
+html.glass-theme.dark .text-slate-700,
+html.glass-theme.dark .text-slate-600 {
+	color: rgb(241, 245, 249) !important;
+}
+html.glass-theme.dark .text-slate-300,
+html.glass-theme.dark .text-slate-400 {
+	color: rgb(226, 232, 240) !important;
+}
+html.glass-theme #typewriter-text,
+html.glass-theme #typewriter-cursor {
+	color: rgb(15, 23, 42);
+}
+html.glass-theme.dark #typewriter-text,
+html.glass-theme.dark #typewriter-cursor {
+	color: rgb(241, 245, 249);
+}
+
+/* SiteInfo 容器：增加底部微弱阴影，避免浅背景上文字"漂浮" */
+html.glass-theme #site-info {
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+html.glass-theme.dark #site-info {
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Avatar 标题：玻璃主题下加深，避免被背景图冲淡 */
+html.glass-theme h1.text-slate-900 {
+	color: rgb(15, 23, 42) !important;
+}
+html.glass-theme.dark h1.text-slate-100 {
+	color: rgb(248, 250, 252) !important;
 }
