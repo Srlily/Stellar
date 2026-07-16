@@ -169,19 +169,6 @@ const hasMore = modalCards.length > 0;
 							]}
 							style={`padding: ${cardPadding}px; border-radius: ${cardRounded}px;${cardMinWidth ? ` min-width: ${cardMinWidth}px;` : ""}`}
 						>
-=======
-						href={card.url}
-						target={card.url.startsWith("/") ? "_self" : "_blank"}
-						rel={card.url.startsWith("/") ? "" : "noopener noreferrer"}
-						class:list={[
-							"nav-card group/card relative flex items-center gap-3 overflow-hidden border transition-colors duration-300 hover:border-primary-400",
-							glassEnabled
-								? "border-white/20 bg-white/10 backdrop-blur-xl"
-								: "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80 dark:hover:border-primary-400",
-						]}
-						style={`padding: ${cardPadding}px; border-radius: ${cardRounded}px;${cardMinWidth ? ` min-width: ${cardMinWidth}px;` : ""}`}
-					>
->>>>>>> origin/dev
 							{/* 图标/图片区域 */}
 							<div class:list={[
 								"flex shrink-0 items-center justify-center overflow-hidden rounded-xl",
