@@ -29,22 +29,250 @@ html.is-animating .transition-fade {
 
 /* ========== 入场 & 滚动动画 (由 GSAP 管理) ========== */
 
-/* 模态框过渡 */
+/* ========== 模态框（NavCards "查看更多" 弹窗） ========== */
+
+/* 背景遮罩：纯色/玻璃两套，通过 html.glass-theme 区分
+ * 不再用 CSS transition 控制显示/隐藏——由 JS Web Animations API 在打开时驱动，
+ * 关闭瞬间隐藏，避免 250ms 过渡期间 backdrop-filter 持续高斯模糊 viewport 导致卡顿。 */
 .modal-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 50;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
 	opacity: 0;
-	transition: opacity 0.25s ease;
+	pointer-events: none;
 }
 .modal-backdrop.is-open {
-	opacity: 1;
+	display: flex;
+	pointer-events: auto;
+	/* opacity 由 JS Web Animations API 控制，避免与 CSS 状态冲突 */
 }
+
+/* 关闭中临时状态：JS 在 RAF 之后短暂加这个类做 display: none 等价，
+ * 关闭完成后清除。保留以便未来需要延迟隐藏的场景。 */
+.modal-backdrop.is-hidden {
+	display: none !important;
+}
+
+/* 非玻璃模式：深色半透明 + 模糊背景内容 */
+.modal-backdrop {
+	background: rgba(0, 0, 0, 0.55);
+	backdrop-filter: blur(8px) saturate(120%);
+	-webkit-backdrop-filter: blur(8px) saturate(120%);
+}
+html.glass-theme .modal-backdrop {
+	background: radial-gradient(
+		ellipse at center,
+		rgba(15, 23, 42, 0.55) 0%,
+		rgba(15, 23, 42, 0.75) 100%
+	);
+	backdrop-filter: blur(24px) saturate(180%);
+	-webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+html.glass-theme:not(.dark) .modal-backdrop {
+	background: radial-gradient(
+		ellipse at center,
+		rgba(255, 255, 255, 0.5) 0%,
+		rgba(15, 23, 42, 0.5) 100%
+	);
+}
+
+/* 弹窗主体：立体玻璃卡片
+ * 关键：不再依赖 CSS transition，关闭瞬间完成（避免叠加 GPU 高斯模糊导致卡顿）。
+ * 入场动画由 Web Animations API 在 JS 中驱动。 */
 .modal-content {
+	position: relative;
+	max-height: 80vh;
+	width: 100%;
+	max-width: 42rem;
+	overflow: hidden auto;
+	border-radius: 1.25rem;
+	padding: 1.5rem;
 	opacity: 0;
-	transform: scale(0.95);
-	transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+	transform: translateY(20px) scale(0.96);
 }
 .modal-content.is-open {
 	opacity: 1;
-	transform: scale(1);
+	transform: translateY(0) scale(1);
+}
+
+/* 非玻璃模式：白底/深色底 + 多层立体阴影 */
+.modal-content {
+	background: white;
+	color: rgb(15, 23, 42);
+	border: 1px solid rgb(226, 232, 240);
+	box-shadow:
+		0 0 0 1px rgba(255, 255, 255, 0.05),
+		0 10px 30px -10px rgba(15, 23, 42, 0.25),
+		0 25px 50px -12px rgba(15, 23, 42, 0.4),
+		0 0 80px -20px rgba(99, 102, 241, 0.15);
+}
+html.dark .modal-content {
+	background: rgb(15, 23, 42);
+	color: rgb(241, 245, 249);
+	border-color: rgb(51, 65, 85);
+	box-shadow:
+		0 0 0 1px rgba(255, 255, 255, 0.04),
+		0 10px 30px -10px rgba(0, 0, 0, 0.6),
+		0 25px 60px -12px rgba(0, 0, 0, 0.7),
+		0 0 100px -20px rgba(99, 102, 241, 0.2);
+}
+
+/* 玻璃模式：弹窗主体使用强玻璃 */
+html.glass-theme .modal-content {
+	background: rgba(255, 255, 255, 0.12);
+	border: 1px solid rgba(255, 255, 255, 0.35);
+	color: var(--glass-card-text);
+	backdrop-filter: blur(28px) saturate(180%);
+	-webkit-backdrop-filter: blur(28px) saturate(180%);
+	box-shadow:
+		/* 外层柔和阴影 */
+		0 25px 50px -12px rgba(15, 23, 42, 0.25),
+		0 0 0 1px rgba(255, 255, 255, 0.08),
+		/* 顶部高光 */
+		inset 0 1px 0 0 rgba(255, 255, 255, 0.4),
+		/* 底部反光 */
+		inset 0 -1px 0 0 rgba(255, 255, 255, 0.1);
+}
+html.glass-theme.dark .modal-content {
+	background: rgba(15, 23, 42, 0.4);
+	border-color: rgba(148, 163, 184, 0.3);
+	color: var(--glass-card-text);
+	box-shadow:
+		0 25px 60px -12px rgba(0, 0, 0, 0.6),
+		0 0 0 1px rgba(255, 255, 255, 0.06),
+		inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+		inset 0 -1px 0 0 rgba(0, 0, 0, 0.2);
+}
+
+/* 弹窗主体顶部高光：渐变亮边 */
+.modal-content::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	padding: 1px;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.6) 0%,
+		rgba(255, 255, 255, 0.2) 25%,
+		rgba(255, 255, 255, 0) 50%,
+		rgba(255, 255, 255, 0.15) 75%,
+		rgba(255, 255, 255, 0.45) 100%
+	);
+	-webkit-mask:
+		linear-gradient(#000 0 0) content-box,
+		linear-gradient(#000 0 0);
+	-webkit-mask-composite: xor;
+	mask-composite: exclude;
+	pointer-events: none;
+	opacity: 0.7;
+	transition: opacity 0.3s ease;
+}
+.modal-content:hover::before {
+	opacity: 0.9;
+}
+
+/* 弹窗打开时：仅给 #smooth-content 背景内容添加模糊（弹窗 DOM 也在 smooth-content 内，
+ *  所以不能用祖先模糊方式。这里改用弹窗背景自身的高斯模糊制造隔离感。 */
+/* （之前对 #smooth-content 模糊的代码已移除，因为它会误模糊弹窗本身。） */
+
+/* 弹窗头部：标题与关闭按钮 */
+.modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 1.25rem;
+	padding-bottom: 1rem;
+	border-bottom: 1px solid color-mix(in oklab, currentColor 10%, transparent);
+}
+.modal-title {
+	font-size: 1.125rem;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+.modal-title::before {
+	content: "";
+	display: inline-block;
+	width: 0.25rem;
+	height: 1.125rem;
+	border-radius: 0.125rem;
+	background: linear-gradient(180deg, rgb(99, 102, 241), rgb(168, 85, 247));
+	box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+}
+
+.modal-close {
+	display: flex;
+	height: 2.25rem;
+	width: 2.25rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	border: 1px solid color-mix(in oklab, currentColor 15%, transparent);
+	background: color-mix(in oklab, currentColor 5%, transparent);
+	color: color-mix(in oklab, currentColor 70%, transparent);
+	cursor: pointer;
+	transition:
+		transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+		background 0.2s ease,
+		color 0.2s ease,
+		border-color 0.2s ease,
+		rotate 0.3s ease;
+}
+.modal-close:hover {
+	background: color-mix(in oklab, currentColor 12%, transparent);
+	color: currentColor;
+	border-color: color-mix(in oklab, currentColor 30%, transparent);
+	transform: scale(1.1) rotate(90deg);
+}
+.modal-close:active {
+	transform: scale(0.95) rotate(90deg);
+}
+.modal-close:focus-visible {
+	outline: 2px solid rgb(99, 102, 241);
+	outline-offset: 2px;
+}
+
+/* 弹窗内卡片网格：stagger 入场
+ * 入场动画由 JS Web Animations API 驱动，关闭瞬间归零（无 CSS transition 残留）。 */
+.modal-grid {
+	display: grid;
+	gap: 0.875rem;
+	grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+	.modal-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+@media (min-width: 1024px) {
+	.modal-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+.modal-grid > * {
+	opacity: 0;
+	transform: translateY(10px);
+}
+.modal-content.is-open .modal-grid > * {
+	opacity: 1;
+	transform: translateY(0);
+}
+
+/* 关闭按钮防溢出（与 GSAP hover scale 配合时不抖动） */
+.modal-content.is-open .modal-grid > *:hover {
+	z-index: 1;
+}
+
+/* 弹窗打开时 body 滚动锁标记 */
+body.modal-open {
+	overflow: hidden;
 }
 
 /* 主题切换时为顶层元素添加过渡，避免突兀闪烁 */

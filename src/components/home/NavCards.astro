@@ -285,35 +285,34 @@ const hasMore = modalCards.length > 0;
 		{hasMore && (
 			<div
 				id="nav-cards-modal"
-				class:list={[
-					"modal-backdrop fixed inset-0 z-50 hidden items-center justify-center p-4 backdrop-blur-sm",
-					glassEnabled ? "bg-black/30" : "bg-black/50",
-				]}
+				class="modal-backdrop"
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="nav-cards-modal-title"
 				aria-hidden="true"
 			>
-				<div class:list={[
-					"modal-content max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border p-6 shadow-xl",
-					glassEnabled
-						? "glass-card border-white/30 bg-white/20 backdrop-blur-2xl shadow-black/10"
-						: "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800",
-				]}>
+				<div
+					id="nav-cards-modal-content"
+					class="modal-content"
+					tabindex="-1"
+				>
 					{/* 弹窗头部 */}
-					<div class="mb-4 flex items-center justify-between">
-						<h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">
+					<div class="modal-header">
+						<h2 id="nav-cards-modal-title" class="modal-title">
 							更多链接
 						</h2>
 						<button
 							type="button"
 							id="nav-cards-modal-close"
-							class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+							class="modal-close"
 							aria-label="关闭"
 						>
-							<Icon name="material-symbols:close-rounded" size={`${iconSize * MODAL_ICON_SCALE}px`} />
+							<Icon name="material-symbols:close-rounded" size="1.125rem" />
 						</button>
 					</div>
 
 					{/* 更多卡片网格 */}
-					<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					<div class="modal-grid">
 						{modalCards.map((card) => (
 							<a
 								href={card.url}
@@ -392,53 +391,199 @@ const hasMore = modalCards.length > 0;
 
 		{/* 弹窗控制脚本 */}
 		{hasMore && (
-			<script is:inline>
-				(function() {
-					const moreBtn = document.getElementById('nav-cards-more-btn');
-					const modal = document.getElementById('nav-cards-modal');
-					const closeBtn = document.getElementById('nav-cards-modal-close');
+			<script>
+				(function () {
+					const OPEN_ANIM_DURATION = 300;
 
-					if (!moreBtn || !modal || !closeBtn) return;
+					const moreBtn = document.getElementById("nav-cards-more-btn");
+					const modal = document.getElementById("nav-cards-modal");
+					const content = document.getElementById("nav-cards-modal-content");
+					const closeBtn = document.getElementById("nav-cards-modal-close");
+
+					if (!moreBtn || !modal || !content || !closeBtn) return;
+
+					const _modal = modal as HTMLElement;
+					const _content = content as HTMLElement;
+					const _closeBtn = closeBtn as HTMLButtonElement;
+					const _moreBtn = moreBtn as HTMLElement;
+
+					// 将弹窗 DOM 移出 #smooth-content / #smooth-wrapper 容器，
+					// 避免 GSAP ScrollSmoother 的 transform 影响 fixed 定位与 backdrop-filter 计算。
+					document.body.appendChild(_modal);
+
+					let lastFocused: HTMLElement | null = null;
+					// 保留打开动画期间的入场 Web Animation 句柄，关闭时取消
+					let openAnimations: Animation[] = [];
+
+					function cancelOpenAnimations() {
+						openAnimations.forEach((a) => a.cancel());
+						openAnimations = [];
+					}
+
+					// 焦点陷阱：循环聚焦可聚焦元素
+					function trapFocus(e: KeyboardEvent) {
+						if (e.key !== "Tab" || !_modal.classList.contains("is-open")) return;
+
+						const focusable = _modal.querySelectorAll<HTMLElement>(
+							'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+						);
+						if (focusable.length === 0) return;
+
+						const first = focusable[0];
+						const last = focusable[focusable.length - 1];
+						const active = document.activeElement as HTMLElement;
+
+						if (e.shiftKey && active === first) {
+							e.preventDefault();
+							last.focus();
+						} else if (!e.shiftKey && active === last) {
+							e.preventDefault();
+							first.focus();
+						}
+					}
 
 					function openModal() {
-						modal.classList.remove('hidden');
-						modal.classList.add('flex');
-						modal.setAttribute('aria-hidden', 'false');
-						document.body.style.overflow = 'hidden';
-						closeBtn.focus();
-						requestAnimationFrame(function() {
-							modal.classList.add('is-open');
-							modal.querySelector('.modal-content').classList.add('is-open');
+						lastFocused = (document.activeElement as HTMLElement) ?? null;
+
+						// 关键：清掉 closeModal 设置的 display:none，让弹窗可见
+						_modal.style.display = "";
+
+						// 立即设为初始态（透明 + 偏移），避免下一帧才看到的目标态闪烁
+						_modal.style.opacity = "0";
+						_content.style.opacity = "0";
+						_content.style.transform = "translateY(20px) scale(0.96)";
+						const modalCards = _content.querySelectorAll<HTMLElement>(".nav-modal-card");
+						modalCards.forEach((card) => {
+							(card as HTMLElement).style.opacity = "0";
+							(card as HTMLElement).style.transform = "translateY(10px)";
+						});
+
+						// 添加 .is-open 让 display:flex / pointer-events:auto 生效
+						_modal.classList.add("is-open");
+						_content.classList.add("is-open");
+						_modal.setAttribute("aria-hidden", "false");
+						document.body.classList.add("modal-open");
+
+						// 下一帧启动 WAAPI 动画（保证起始态被浏览器 paint 后才开始过渡）
+						requestAnimationFrame(() => {
+							openAnimations = [
+								_modal.animate(
+									[{ opacity: 0 }, { opacity: 1 }],
+									{
+										duration: OPEN_ANIM_DURATION,
+										easing: "ease-out",
+										fill: "forwards",
+									}
+								),
+								_content.animate(
+									[
+										{ opacity: 0, transform: "translateY(20px) scale(0.96)" },
+										{ opacity: 1, transform: "translateY(0) scale(1)" },
+									],
+									{
+										duration: OPEN_ANIM_DURATION + 50,
+										easing: "cubic-bezier(0.34, 1.4, 0.64, 1)",
+										fill: "forwards",
+									}
+								),
+							];
+
+							modalCards.forEach((card, i) => {
+								openAnimations.push(
+									(card as HTMLElement).animate(
+										[
+											{ opacity: 0, transform: "translateY(10px)" },
+											{ opacity: 1, transform: "translateY(0)" },
+										],
+										{
+											delay: 50 + i * 50,
+											duration: 250,
+											easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+											fill: "forwards",
+										}
+									)
+								);
+							});
+
+							_closeBtn.focus();
 						});
 					}
 
 					function closeModal() {
-						modal.classList.remove('is-open');
-						var content = modal.querySelector('.modal-content');
-						if (content) content.classList.remove('is-open');
-						setTimeout(function() {
-							modal.classList.add('hidden');
-							modal.classList.remove('flex');
-							modal.setAttribute('aria-hidden', 'true');
-							document.body.style.overflow = '';
-							moreBtn.focus();
-						}, 250);
+						// ========== 根本性重构：关闭零延迟，所有操作同步执行 ==========
+						// 不使用任何锁、RAF、setTimeout、transition——彻底消除卡顿和延迟。
+						// 唯一的"等待"是浏览器下一帧 paint 时已经看不到弹窗（因为 display:none）。
+
+						// 取消正在进行的入场动画，避免下一帧 paint 时回放
+						cancelOpenAnimations();
+
+						// 2. 同步隐藏弹窗 —— 用 display:none 直接消失
+						// 这是最关键的一行：display:none 立即生效，无任何过渡
+						_modal.style.display = "none";
+						_modal.classList.remove("is-open");
+						_content.classList.remove("is-open");
+						_modal.setAttribute("aria-hidden", "true");
+						document.body.classList.remove("modal-open");
+
+						// 3. 清掉 GSAP hover / WAAPI 残留的 inline style
+						// 关键：只清掉 GSAP 写入的 transform/opacity，不要清掉 Icon.astro 写入的 width/height
+						_content.removeAttribute("style");
+						_modal.removeAttribute("style");
+						const modalCards = _content.querySelectorAll<HTMLElement>(".nav-modal-card");
+						modalCards.forEach((card) => {
+							card.style.transform = "";
+							card.style.opacity = "";
+							card.style.boxShadow = "";
+							const icon = card.querySelector<HTMLElement>("[data-icon-container]");
+							if (icon) {
+								// Icon 组件自己管理 width/height/color，只清掉 GSAP 残留
+								icon.style.transform = "";
+								icon.style.transformOrigin = "";
+								icon.style.opacity = "";
+							}
+							const arrow = card.querySelector<HTMLElement>(".nav-modal-card-arrow");
+							if (arrow) {
+								arrow.style.transform = "";
+								arrow.style.opacity = "";
+							}
+						});
+
+						// 4. kill GSAP tween（异步但不影响响应）
+						const gsap = (window as any).gsap;
+						if (gsap) {
+							modalCards.forEach((card) => gsap.killTweensOf(card));
+						}
+
+						// 5. 立即恢复 focus（让 Tab 顺序回到正常）
+						(lastFocused ?? _moreBtn).focus();
 					}
 
-					moreBtn.addEventListener('click', openModal);
-					closeBtn.addEventListener('click', closeModal);
+					// 打开
+					_moreBtn.addEventListener("click", openModal);
 
-					// 点击背景关闭
-					modal.addEventListener('click', function(e) {
-						if (e.target === modal) {
+					// 关闭按钮
+					_closeBtn.addEventListener("click", closeModal);
+
+					// 点击背景关闭：使用 mousedown 阶段判断 + contains 检测，
+					// 避免 click 阶段被某些边缘 case（focus 切换、pointer 状态）干扰导致需点击两次。
+					function onModalPointerDown(e: MouseEvent) {
+						const target = e.target as Node;
+						// 点击事件源不在 _content 子树内 → 视为点击背景
+						if (!_content.contains(target)) {
+							e.stopPropagation();
 							closeModal();
 						}
-					});
+					}
+					_modal.addEventListener("mousedown", onModalPointerDown);
 
-					// ESC 关闭
-					document.addEventListener('keydown', function(e) {
-						if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+					// ESC 关闭 + Tab 焦点陷阱
+					document.addEventListener("keydown", (e) => {
+						if (!_modal.classList.contains("is-open")) return;
+						if (e.key === "Escape") {
+							e.preventDefault();
 							closeModal();
+						} else {
+							trapFocus(e);
 						}
 					});
 				})();

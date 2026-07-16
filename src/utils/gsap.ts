@@ -310,18 +310,21 @@ function initOneCardHover(cfg: CardHoverConfig): void {
       : null;
 
     card.addEventListener("mouseenter", () => {
+      gsap.killTweensOf([card, icon, content, arrow].filter(Boolean));
       gsap.to(card, {
         y: -6,
         scale: 1.04,
         boxShadow: shadow,
         duration: 0.35,
         ease: "power2.out",
+        overwrite: true,
       });
       if (icon && cfg.iconAnim) {
         gsap.to(icon, {
           ...cfg.iconAnim,
           duration: 0.4,
           ease: "back.out(1.7)",
+          overwrite: true,
         });
       }
       if (content && cfg.contentAnim) {
@@ -329,6 +332,7 @@ function initOneCardHover(cfg: CardHoverConfig): void {
           ...cfg.contentAnim,
           duration: 0.3,
           ease: "power2.out",
+          overwrite: true,
         });
       }
       if (arrow) {
@@ -337,41 +341,58 @@ function initOneCardHover(cfg: CardHoverConfig): void {
           opacity: 1,
           duration: 0.3,
           ease: "power2.out",
+          overwrite: true,
         });
       }
     });
 
     card.addEventListener("mouseleave", () => {
+      // 1. 先 kill 残留 tween
+      gsap.killTweensOf([card, icon, content, arrow].filter(Boolean));
+      // 2. 用 gsap.set 立即归零关键属性（避免动画结束时残留）
+      if (icon) gsap.set(icon, { clearProps: "scale,rotate,x,y,skewX,skewY,transformOrigin" });
+      if (content) gsap.set(content, { clearProps: "scale,x,y" });
+      if (arrow) gsap.set(arrow, { clearProps: "x" });
+      // 3. 用 tween 平滑过渡到归零状态（但不再使用 clearProps 避免再次残留）
       gsap.to(card, {
         y: 0,
         scale: 1,
         boxShadow: "0 0 0 rgba(0,0,0,0)",
-        duration: 0.3,
+        duration: 0.25,
         ease: "power2.out",
+        overwrite: true,
       });
       if (icon) {
         gsap.to(icon, {
           scale: 1,
           rotate: 0,
+          x: 0,
           y: 0,
-          duration: 0.3,
+          skewX: 0,
+          skewY: 0,
+          transformOrigin: "50% 50%",
+          duration: 0.25,
           ease: "power2.out",
+          overwrite: true,
         });
       }
       if (content) {
         gsap.to(content, {
           scale: 1,
+          x: 0,
           y: 0,
-          duration: 0.3,
+          duration: 0.25,
           ease: "power2.out",
+          overwrite: true,
         });
       }
       if (arrow) {
         gsap.to(arrow, {
           x: 0,
           opacity: 0,
-          duration: 0.3,
+          duration: 0.25,
           ease: "power2.out",
+          overwrite: true,
         });
       }
     });
