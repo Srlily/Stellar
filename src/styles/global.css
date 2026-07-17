@@ -296,37 +296,61 @@ main.align-center-center {
 	justify-content: center;
 }
 
-/* ========== GSAP ScrollSmoother 容器（两页式首页） ========== */
+/* ========== 两页式滚动系统（CSS scroll-snap + 丝滑滚动） ==========
+ *
+ * 关键设计（根本重构）：
+ * - .page 不强制 100vh：高度由内容自适应（min-height: 100vh）
+ * - 内容垂直水平居中：使用 flex + items-center + justify-center
+ * - .page-content 是 snap 锚点：snap-align: start 对齐到内容顶部
+ * - snap-stop: normal：避免强制停在每个 snap 点（让用户可滚动中间过渡）
+ *
+ * 解决"内容短导致定位不对"：
+ * - 短内容也居中显示，不会出现"内容靠顶 + 大片空白"
+ * - scroll-snap proximity 而非 mandatory：滚动到中间也能继续滚，不会卡顿
+ *
+ * 性能：
+ * - transform: translateZ(0) 强制 GPU 合成层
+ * - will-change 提前告知浏览器
+ */
 
-/* 外层 fixed 容器，铺满视口并裁切内容 */
-#smooth-wrapper {
-	position: fixed;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	overflow: hidden;
+html {
+	scrollbar-width: none; /* Firefox */
+	-ms-overflow-style: none; /* IE/Edge */
+	scroll-behavior: smooth;
+	/* scroll-snap-type 默认启用；运行时可由 JS 动态关闭（循环瞬移时） */
+	scroll-snap-type: y proximity;
+}
+html::-webkit-scrollbar {
+	display: none;
+	width: 0;
+	height: 0;
 }
 
-/* 内层可滚动内容，自然高度由子元素决定 */
-#smooth-content {
-	width: 100%;
-	will-change: transform;
-}
-
-/* 每页占满一个视口高度 */
+/* 每页：高度由内容自适应 + scroll-snap 锚点 + GPU 加速
+ *
+ * 关键：不强制 min-height: 100vh——改为让内容自己撑开，
+ * 短内容时 page 自然矮，避免"page 100vh + 内容居顶"的视觉错位 */
 .page {
 	position: relative;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	min-height: 100vh;
+	align-items: center;
+	min-height: 100vh; /* 至少一屏，保证短内容也撑满 */
+	padding: 4rem 0;
 	width: 100%;
+	scroll-snap-align: start;
+	scroll-snap-stop: normal;
+	transform: translateZ(0);
 }
 
-/* 页面内容容器：用于方向感知动画定位 */
+/* 页面内容容器：GSAP scrub 动画控制 transform/opacity
+ * 父 .page 已经 flex 居中，子元素只需要 normal flow 即可 */
 .page-content {
 	position: relative;
+	width: 100%;
 	will-change: transform, opacity;
+	transform: translateZ(0);
 }
 
 /* ========== 液态玻璃视觉（与 light/dark 叠加） ========== */
@@ -437,6 +461,7 @@ html.glass-theme *::after {
 	-webkit-backdrop-filter: blur(8px) saturate(var(--glass-saturation)%);
 	backdrop-filter: blur(8px) saturate(var(--glass-saturation)%);
 }
+
 html.dark .glass-tile {
 	background: var(--glass-tile-bg);
 	border-color: var(--glass-tile-border);

@@ -163,14 +163,10 @@ const align = backgroundConfig.align ?? "center";
 	<body class="flex min-h-dvh flex-col bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100">
 		<Background />
 		<Animation />
-		<!-- ScrollSmoother 容器：用于整页平滑滚动（两页式首页） -->
-		<div id="smooth-wrapper">
-			<div id="smooth-content">
-				<main id="swup" class={`flex flex-1 flex-col transition-fade${align === "center-center" ? " align-center-center" : ""}`}>
-					<slot />
-				</main>
-				<slot name="footer" />
-			</div>
-		</div>
+		<!-- 主滚动容器：原生滚动 + CSS scroll-snap，body 自身作为 scroller -->
+		<main id="swup" class={`flex flex-1 flex-col transition-fade${align === "center-center" ? " align-center-center" : ""}`}>
+			<slot />
+		</main>
+		<slot name="footer" />
 	</body>
 </html>

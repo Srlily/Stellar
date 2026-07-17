@@ -235,6 +235,21 @@ export interface ProjectCardsConfig {
 	items?: ProjectItem[]; // 项目列表
 }
 
+// ==================== 两页式滚动配置类型 ====================
+
+// 两页式滚动配置
+export interface PageScrollConfig {
+	// 是否启用无限循环滚动（滚到底自动跳顶部 / 滚到顶自动跳底部）
+	// 关闭时：滚动到顶部/底部即停止（无 snap 反弹）
+	infiniteLoop?: boolean;
+	// 是否启用 CSS scroll-snap（滚动停止自动对齐到页面边界，自带丝滑动画）
+	// 关闭时：纯滚动，无 snap（适合不喜欢 snap 行为的用户）
+	scrollSnap?: boolean;
+	// ScrollTrigger scrub 延迟（秒），越大动画越"跟手"
+	// 0 = 完全跟手；0.4 = 跟随 + 400ms 减速感（推荐）
+	scrubDelay?: number;
+}
+
 // 主页配置
 export interface HomeConfig {
 	avatar?: {
@@ -281,6 +296,9 @@ export type SiteConfig = {
 
 	// 液态玻璃视觉配置（与 light/dark 叠加，关闭时回退到普通卡片外观）
 	glassTheme?: GlassThemeConfig;
+
+	// 两页式滚动配置（仅 homeLayout === "vertical" 时生效）
+	pageScroll?: PageScrollConfig;
 
 	// 主页布局：vertical（垂直排列）| horizontal（水平排列）
 	homeLayout?: "vertical" | "horizontal";

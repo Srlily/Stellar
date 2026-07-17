@@ -246,9 +246,13 @@ const projectGridClass = getProjectGridClass(projectColumns);
 								<Icon name="material-symbols:add-rounded" size={`${projectIconSize}px`} class="text-slate-400" />
 							</div>
 						</div>
-						<div class="flex flex-col items-start gap-1">
+						<div class="flex flex-col gap-1">
 							<h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover/card:text-primary-500 transition-colors">查看更多</h3>
 							<p class="line-clamp-1 text-xs text-slate-500 dark:text-slate-400">还有 {modalProjects.length} 个项目</p>
+						</div>
+						{/* 与项目卡片一致的标签占位容器（保持 grid 对齐高度一致） */}
+						<div class="project-tags-container flex flex-nowrap gap-1 overflow-hidden" style="visibility: hidden;">
+							<span class="project-tag inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium">占位</span>
 						</div>
 					</button>
 				)}
@@ -256,20 +260,16 @@ const projectGridClass = getProjectGridClass(projectColumns);
 		</div>
 
 		{/* 选项卡脚本 */}
-		<script is:inline>
+		<script>
 			(function() {
-				const skillTab = document.querySelector('.skill-tab');
-				const projectTab = document.querySelector('.project-tab');
-				const tabIndicator = document.getElementById('tab-indicator');
-				const skillContent = document.getElementById('skill-content');
-				const projectContent = document.getElementById('project-content');
+				function initTab() {
+					const skillTab = document.querySelector('.skill-tab');
+					const projectTab = document.querySelector('.project-tab');
+					const tabIndicator = document.getElementById('tab-indicator');
+					const skillContent = document.getElementById('skill-content');
+					const projectContent = document.getElementById('project-content');
 
-				// 项目弹窗相关
-				const projectMoreBtn = document.getElementById('project-more-btn');
-				const projectModal = document.getElementById('project-modal');
-				const projectModalClose = document.getElementById('project-modal-close');
-
-				if (!skillTab || !projectTab || !tabIndicator || !skillContent || !projectContent) return;
+					if (!skillTab || !projectTab || !tabIndicator || !skillContent || !projectContent) return;
 
 				function switchTab(tab) {
 					const isDark = document.documentElement.classList.contains('dark');
@@ -307,34 +307,15 @@ const projectGridClass = getProjectGridClass(projectColumns);
 				skillTab.addEventListener('click', () => switchTab('skill'));
 				projectTab.addEventListener('click', () => switchTab('project'));
 
-				// 项目弹窗
-				if (projectMoreBtn && projectModal && projectModalClose) {
-					projectMoreBtn.addEventListener('click', function() {
-						projectModal.classList.remove('hidden');
-						projectModal.classList.add('flex');
-						projectModal.setAttribute('aria-hidden', 'false');
-						document.body.style.overflow = 'hidden';
-					});
+				// 项目弹窗控制：完全由下方第二个 <script> 处理（与 NavCards 逻辑一致）
+				// 此处不重复绑定，避免双重触发
+				}  // 关闭 initTab()
 
-					projectModalClose.addEventListener('click', function() {
-						projectModal.classList.add('hidden');
-						projectModal.classList.remove('flex');
-						projectModal.setAttribute('aria-hidden', 'true');
-						document.body.style.overflow = '';
-						projectMoreBtn.focus();
-					});
-
-					projectModal.addEventListener('click', function(e) {
-						if (e.target === projectModal) {
-							projectModalClose.click();
-						}
-					});
-
-					document.addEventListener('keydown', function(e) {
-						if (e.key === 'Escape' && !projectModal.classList.contains('hidden')) {
-							projectModalClose.click();
-						}
-					});
+				// DOM ready 后初始化
+				if (document.readyState === 'loading') {
+					document.addEventListener('DOMContentLoaded', initTab);
+				} else {
+					initTab();
 				}
 			})();
 		</script>
@@ -501,45 +482,70 @@ const projectGridClass = getProjectGridClass(projectColumns);
 	</section>
 )}
 
-{/* 项目弹窗 - 统一公共组件 */}
+{/* 项目弹窗 - 与 NavCards 完全相同的结构与脚本 */}
 {projectHasMore && (
 	<div
 		id="project-modal"
-		class:list={[
-			"modal-backdrop fixed inset-0 z-50 hidden items-center justify-center p-4 backdrop-blur-sm",
-			glassEnabled ? "bg-black/30" : "bg-black/50",
-		]}
+		class="modal-backdrop"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="project-modal-title"
 		aria-hidden="true"
 	>
-		<div class:list={[
-			"modal-content max-h-[80vh] w-full max-w-2xl overflow-y-auto rounded-2xl border p-6 shadow-xl",
-			glassEnabled
-				? "border-white/30 bg-white/20 backdrop-blur-2xl shadow-black/10"
-				: "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800",
-		]}>
-			<div class="mb-4 flex items-center justify-between">
-				<h2 class="text-lg font-semibold text-slate-900 dark:text-slate-100">更多项目</h2>
+		<div
+			id="project-modal-content"
+			class="modal-content"
+			tabindex="-1"
+		>
+			<div class="modal-header">
+				<h2 id="project-modal-title" class="modal-title">更多项目</h2>
 				<button
 					type="button"
 					id="project-modal-close"
-					class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+					class="modal-close"
+					aria-label="关闭"
 				>
 					<Icon name="material-symbols:close-rounded" size="1.25rem" />
 				</button>
 			</div>
-			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{modalProjects.map((project) => (
+			<div class="modal-grid">
+				{modalProjects.map((project, index) => (
 					<a
 						href={project.url}
 						target={project.url.startsWith("/") ? "_self" : "_blank"}
 						rel={project.url.startsWith("/") ? "" : "noopener noreferrer"}
 						class:list={[
-							"group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg",
+							"nav-modal-card group/card relative flex flex-col gap-3 overflow-hidden rounded-xl border p-4 transition-all duration-300 hover:scale-105 hover:border-primary-400 hover:shadow-lg hover:shadow-primary-500/20",
 							glassEnabled
-								? "border-white/20 bg-white/30"
+								? "border-white/20 bg-white/10 backdrop-blur-xl"
 								: "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-700/50 dark:hover:border-primary-400",
 						]}
 					>
+						{/* 项目图片或图标（与页面项目卡片 <a> 完全一致） */}
+						<div class:list={[
+							"relative h-20 w-full overflow-hidden rounded-lg",
+							glassTileClass || "bg-slate-100 dark:bg-slate-600",
+						]}>
+							{project.image ? (
+								<img
+									src={project.image}
+									alt={project.name}
+									class="h-full w-full object-cover transition-transform duration-300 group-hover/card:scale-105"
+									loading="lazy"
+									decoding="async"
+								/>
+							) : (
+								<div class="flex h-full w-full items-center justify-center">
+									{project.icon ? (
+										<Icon name={project.icon} size="2rem" class="text-slate-400" />
+									) : (
+										<Icon name="material-symbols:folder-outline-rounded" size="2rem" class="text-slate-400" />
+									)}
+								</div>
+							)}
+						</div>
+
+						{/* 项目信息（标题 + 描述） */}
 						<div class="flex flex-col gap-1">
 							<h3 class="text-sm font-semibold text-slate-900 dark:text-slate-100 group-hover/card:text-primary-500 transition-colors">
 								{project.name}
@@ -550,15 +556,17 @@ const projectGridClass = getProjectGridClass(projectColumns);
 								</p>
 							)}
 						</div>
+
+						{/* 项目标签 */}
 						{project.tags && project.tags.length > 0 && (
 							<div class="project-tags-container flex flex-nowrap gap-1 overflow-hidden">
-								{project.tags.map((tag, index) => (
+								{project.tags.map((tag, tagIndex) => (
 									<span class:list={[
 										"project-tag inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-medium",
 										glassEnabled
 											? "bg-white/20 text-slate-700"
 											: "bg-slate-100 text-slate-600 dark:bg-slate-600 dark:text-slate-300",
-									]} data-index={index}>
+									]} data-index={tagIndex}>
 										{tag}
 									</span>
 								))}
@@ -571,117 +579,162 @@ const projectGridClass = getProjectGridClass(projectColumns);
 	</div>
 )}
 
-{/* 项目弹窗控制脚本 */}
-<script is:inline>
-	(function() {
-		const moreBtn = document.getElementById('project-modal-open');
-		const modal = document.getElementById('project-modal');
-		const closeBtn = document.getElementById('project-modal-close');
-		if (!moreBtn || !modal || !closeBtn) return;
-		moreBtn.addEventListener('click', function() {
-			modal.classList.remove('hidden');
-			modal.classList.add('flex');
-			modal.setAttribute('aria-hidden', 'false');
-			document.body.style.overflow = 'hidden';
-			requestAnimationFrame(function() {
-				modal.classList.add('is-open');
-				var mc = modal.querySelector('.modal-content');
-				if (mc) mc.classList.add('is-open');
-				requestAnimationFrame(handleTagOverflow);
+{/* 项目弹窗控制脚本 - 与 NavCards 完全相同的逻辑 */}
+<script>
+	(function () {
+		const OPEN_ANIM_DURATION = 300;
+
+		const moreBtn = document.getElementById("project-modal-open");
+		const modal = document.getElementById("project-modal");
+		const content = document.getElementById("project-modal-content");
+		const closeBtn = document.getElementById("project-modal-close");
+
+		if (!moreBtn || !modal || !content || !closeBtn) return;
+
+		const _modal = modal as HTMLElement;
+		const _content = content as HTMLElement;
+		const _closeBtn = closeBtn as HTMLButtonElement;
+		const _moreBtn = moreBtn as HTMLElement;
+
+		// 将弹窗 DOM 移出 #smooth-content / #smooth-wrapper 容器
+		document.body.appendChild(_modal);
+
+		let lastFocused: HTMLElement | null = null;
+		let openAnimations: Animation[] = [];
+
+		function cancelOpenAnimations() {
+			openAnimations.forEach((a) => a.cancel());
+			openAnimations = [];
+		}
+
+		function openModal() {
+			lastFocused = (document.activeElement as HTMLElement) ?? null;
+
+			// 关键：清掉 closeModal 设置的 display:none，让弹窗可见
+			_modal.style.display = "";
+
+			// 立即设为初始态（透明 + 偏移），避免下一帧才看到的目标态闪烁
+			_modal.style.opacity = "0";
+			_content.style.opacity = "0";
+			_content.style.transform = "translateY(20px) scale(0.96)";
+			const modalCards = _content.querySelectorAll<HTMLElement>(".nav-modal-card");
+			modalCards.forEach((card) => {
+				(card as HTMLElement).style.opacity = "0";
+				(card as HTMLElement).style.transform = "translateY(10px)";
 			});
-		});
-		closeBtn.addEventListener('click', function() {
-			modal.classList.remove('is-open');
-			var mc = modal.querySelector('.modal-content');
-			if (mc) mc.classList.remove('is-open');
-			setTimeout(function() {
-				modal.classList.add('hidden');
-				modal.classList.remove('flex');
-				modal.setAttribute('aria-hidden', 'true');
-				document.body.style.overflow = '';
-				moreBtn.focus();
-			}, 250);
-		});
-		modal.addEventListener('click', function(e) {
-			if (e.target === modal) closeBtn.click();
-		});
-		document.addEventListener('keydown', function(e) {
-			if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeBtn.click();
-		});
 
-		// 标签溢出检测 - 简化版
-		function handleTagOverflow() {
-			document.querySelectorAll('.project-tags-container').forEach(function(container) {
-				const tags = Array.from(container.querySelectorAll('.project-tag'));
-				if (tags.length <= 1) return;
+			// 添加 .is-open 让 display:flex / pointer-events:auto 生效
+			_modal.classList.add("is-open");
+			_content.classList.add("is-open");
+			_modal.setAttribute("aria-hidden", "false");
+			document.body.classList.add("modal-open");
 
-				// 重置所有标签
-				tags.forEach(tag => {
-					tag.style.display = '';
+			// 下一帧启动 WAAPI 动画
+			requestAnimationFrame(() => {
+				openAnimations = [
+					_modal.animate(
+						[{ opacity: 0 }, { opacity: 1 }],
+						{
+							duration: OPEN_ANIM_DURATION,
+							easing: "ease-out",
+							fill: "forwards",
+						}
+					),
+					_content.animate(
+						[
+							{ opacity: 0, transform: "translateY(20px) scale(0.96)" },
+							{ opacity: 1, transform: "translateY(0) scale(1)" },
+						],
+						{
+							duration: OPEN_ANIM_DURATION + 50,
+							easing: "cubic-bezier(0.34, 1.4, 0.64, 1)",
+							fill: "forwards",
+						}
+					),
+				];
+
+				modalCards.forEach((card, i) => {
+					openAnimations.push(
+						(card as HTMLElement).animate(
+							[
+								{ opacity: 0, transform: "translateY(10px)" },
+								{ opacity: 1, transform: "translateY(0)" },
+							],
+							{
+								delay: 50 + i * 50,
+								duration: 250,
+								easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+								fill: "forwards",
+							}
+						)
+					);
 				});
 
-				// 检查是否溢出
-				if (container.scrollWidth <= container.clientWidth) {
-					// 没有溢出，移除 badge
-					const badge = container.querySelector('.tag-overflow-badge');
-					if (badge) badge.style.display = 'none';
-					return;
-				}
-
-				// 溢出：从后往前逐个隐藏直到不溢出
-				let hiddenCount = 0;
-				for (let i = tags.length - 1; i >= 0; i--) {
-					tags[i].style.display = 'none';
-					hiddenCount++;
-					if (container.scrollWidth <= container.clientWidth) {
-						break;
-					}
-				}
-
-				// 添加 +N badge
-				if (hiddenCount > 0) {
-					let overflowBadge = container.querySelector('.tag-overflow-badge');
-					if (!overflowBadge) {
-						overflowBadge = document.createElement('span');
-						const isGlass = document.documentElement.classList.contains('glass-theme');
-						overflowBadge.className = isGlass
-							? 'tag-overflow-badge inline-flex items-center rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-slate-700'
-							: 'tag-overflow-badge inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-600 dark:text-slate-300';
-						container.appendChild(overflowBadge);
-					}
-					overflowBadge.textContent = '+' + hiddenCount;
-					overflowBadge.style.display = '';
-				}
+				_closeBtn.focus();
 			});
 		}
 
-		// 初始化 - 立即运行和延迟运行确保布局完成
-		function initTagOverflow() {
-			handleTagOverflow();
-			requestAnimationFrame(function() {
-				handleTagOverflow();
+		function closeModal() {
+			cancelOpenAnimations();
+
+			_modal.style.display = "none";
+			_modal.classList.remove("is-open");
+			_content.classList.remove("is-open");
+			_modal.setAttribute("aria-hidden", "true");
+			document.body.classList.remove("modal-open");
+
+			const modalCards = _content.querySelectorAll<HTMLElement>(".nav-modal-card");
+			const gsap = (window as any).gsap;
+			if (gsap) {
+				modalCards.forEach((card) => gsap.killTweensOf(card));
+			}
+
+			modalCards.forEach((card) => {
+				(card as HTMLElement).style.transform = "";
+				(card as HTMLElement).style.opacity = "";
+				const icon = card.querySelector<HTMLElement>("[data-icon-container]");
+				if (icon) {
+					icon.style.transform = "";
+					icon.style.transformOrigin = "";
+					icon.style.opacity = "";
+				}
+				const arrow = card.querySelector<HTMLElement>(".nav-modal-card-arrow");
+				if (arrow) {
+					arrow.style.transform = "";
+					arrow.style.opacity = "";
+				}
 			});
+			_content.removeAttribute("style");
+			_modal.removeAttribute("style");
+			modalCards.forEach((card) => {
+				card.removeAttribute("style");
+			});
+
+			(lastFocused ?? _moreBtn).focus();
 		}
 
-		// 立即尝试（元素可能已加载）
-		if (document.readyState === 'complete') {
-			initTagOverflow();
-		} else if (document.readyState === 'loading') {
-			document.addEventListener('DOMContentLoaded', initTagOverflow);
-		} else {
-			initTagOverflow();
-		}
+		// 打开
+		_moreBtn.addEventListener("click", openModal);
 
-		window.addEventListener('resize', handleTagOverflow);
-		window.addEventListener('load', function() {
-			requestAnimationFrame(handleTagOverflow);
-			setTimeout(handleTagOverflow, 200);
+		// 关闭按钮
+		_closeBtn.addEventListener("click", closeModal);
+
+		// 点击背景关闭：点击发生在 .modal-content 之外的任何位置都关闭
+		_modal.addEventListener("mousedown", (e: MouseEvent) => {
+			const target = e.target as Node;
+			if (!_content.contains(target)) {
+				e.stopPropagation();
+				closeModal();
+			}
 		});
-		// 监听切换选项卡事件
-		document.addEventListener('check-tag-overflow', function() {
-			requestAnimationFrame(function() {
-				requestAnimationFrame(handleTagOverflow);
-			});
+
+		// ESC 关闭
+		document.addEventListener("keydown", (e) => {
+			if (!_modal.classList.contains("is-open")) return;
+			if (e.key === "Escape") {
+				e.preventDefault();
+				closeModal();
+			}
 		});
 	})();
 </script>

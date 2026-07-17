@@ -54,6 +54,19 @@ export const siteConfig: SiteConfig = {
 		cornerRadius: 24,
 	},
 
+	// 两页式滚动配置
+	pageScroll: {
+		// 是否启用无限循环滚动（滚到底自动跳顶部 / 滚到顶自动跳底部）
+		// 关闭时：滚动到顶部/底部即停止（无 snap 反弹）
+		infiniteLoop: true,
+		// 是否启用 CSS scroll-snap（滚动停止自动对齐到页面边界，自带丝滑动画）
+		// 关闭时：纯滚动，无 snap（适合不喜欢 snap 行为的用户）
+		scrollSnap: true,
+		// ScrollTrigger scrub 延迟（秒），越大动画越"跟手"
+		// 0 = 完全跟手；0.4 = 跟随 + 400ms 减速感（推荐）
+		scrubDelay: 0.4,
+	},
+
 	// 统计分析
 	analytics: {
 		// Google Analytics ID
