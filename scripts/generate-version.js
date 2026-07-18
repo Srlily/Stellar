@@ -4,120 +4,148 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const outDir = join(__dirname, "..", "src", "generated");
-const outFile = join(outDir, "version.json");
+const OUTPUT_DIR = join(__dirname, "..", "src", "generated");
+const OUTPUT_FILE = join(OUTPUT_DIR, "version.json");
 
-function safeExec(cmd) {
+// ---------- shell helpers ----------
+
+function exec(cmd) {
   try {
-    return execSync(cmd, { encoding: "utf-8" }).trim();
+    return execSync(cmd, { encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"] }).trim();
   } catch {
     return "";
   }
 }
 
-// 从环境变量或 git 获取基本信息
-const branch =
-  process.env.CF_PAGES_BRANCH ||
-  process.env.GIT_BRANCH ||
-  process.env.BRANCH ||
-  safeExec("git rev-parse --abbrev-ref HEAD") ||
-  "unknown";
+function execGit(...args) {
+  return exec(`git ${args.join(" ")}`);
+}
 
-const fullHash =
-  process.env.CF_PAGES_COMMIT_SHA ||
-  process.env.GITHUB_SHA ||
-  process.env.VERCEL_GIT_COMMIT_SHA ||
-  safeExec("git rev-parse HEAD") ||
-  "";
+// ---------- env / git readers ----------
 
-const shortHash = fullHash.slice(0, 7) || "unknown";
+function readBranch() {
+  return (
+    process.env.CF_PAGES_BRANCH ||
+    process.env.GIT_BRANCH ||
+    execGit("rev-parse", "--abbrev-ref", "HEAD") ||
+    "unknown"
+  );
+}
 
-// 从 GitHub API 获取分支的 commit 数
-async function getCommitCount(owner, repo, branch) {
-  const headers = { "User-Agent": "stellar-build", Accept: "application/vnd.github+json" };
+function readCommitHash() {
+  const hash =
+    process.env.CF_PAGES_COMMIT_SHA ||
+    process.env.GITHUB_SHA ||
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    execGit("rev-parse", "HEAD");
+  return hash || "";
+}
+
+function parseRepo(remoteUrl) {
+  if (!remoteUrl) return null;
+  const m = remoteUrl.match(/github\.com[:/]([^/]+)\/([^/]+?)(?:\.git)?$/);
+  return m ? { owner: m[1], repo: m[2] } : null;
+}
+
+// ---------- github api ----------
+
+function githubHeaders() {
+  const headers = {
+    "User-Agent": "stellar-build",
+    Accept: "application/vnd.github+json",
+  };
   if (process.env.GITHUB_TOKEN) {
     headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   }
-
-  const url = `https://api.github.com/repos/${owner}/${repo}/commits?per_page=1&sha=${branch}`;
-  const res = await fetch(url, { headers });
-  if (!res.ok) return null;
-
-  const linkHeader = res.headers.get("Link");
-  if (!linkHeader) return 1; // 没有分页 = 只有 1 个 commit
-
-  // Link: <...?page=N>; rel="last"
-  const match = linkHeader.match(/[?&]page=(\d+)>;\s*rel="last"/);
-  return match ? parseInt(match[1], 10) : 1;
+  return headers;
 }
 
-// 从 GitHub API 获取最近 tag
-async function getLatestTag(owner, repo) {
-  const headers = { "User-Agent": "stellar-build", Accept: "application/vnd.github+json" };
-  if (process.env.GITHUB_TOKEN) {
-    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+async function fetchWithTimeout(url, options = {}, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
   }
-
-  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/tags?per_page=1`, { headers });
-  if (!res.ok) return null;
-  const tags = await res.json();
-  return tags[0]?.name || null;
 }
 
-// 解析远程仓库
-const remote = safeExec("git config --get remote.origin.url");
-const match = remote.match(/github\.com[:/](.+?)\/(.+?)(?:\.git)?$/);
-
-async function main() {
-  let commitCount = 1;
-  let tag = null;
-
-  if (match) {
-    const [, owner, repo] = match;
-    commitCount = (await getCommitCount(owner, repo, branch)) || 1;
-    if (branch === "main" || branch === "master") {
-      tag = await getLatestTag(owner, repo);
-    }
+async function fetchLatestTag(owner, repo) {
+  try {
+    const res = await fetchWithTimeout(
+      `https://api.github.com/repos/${owner}/${repo}/tags?per_page=1`,
+      { headers: githubHeaders() }
+    );
+    if (!res.ok) return null;
+    const tags = await res.json();
+    return tags[0]?.name ?? null;
+  } catch {
+    return null;
   }
+}
 
-  let version;
-  let isDev;
-  if (branch === "main" || branch === "master") {
-    isDev = false;
-    version = tag || `1.0.0-${commitCount}-g${shortHash}`;
-  } else {
-    isDev = true;
-    version = `dev-${commitCount}-${shortHash}`;
-  }
+// ---------- version builders ----------
 
-  const data = {
+function buildDevVersion(shortHash) {
+  return `dev-${shortHash}`;
+}
+
+function buildMainVersion(tag, shortHash) {
+  return tag || `1.0.0-${shortHash}`;
+}
+
+// ---------- pipeline ----------
+
+async function generate() {
+  const branch = readBranch();
+  const fullHash = readCommitHash();
+  const shortHash = fullHash.slice(0, 7) || "unknown";
+
+  const isMain = branch === "main" || branch === "master";
+  const repo = parseRepo(execGit("config", "--get", "remote.origin.url"));
+  const tag = isMain && repo ? await fetchLatestTag(repo.owner, repo.repo) : null;
+
+  const version = isMain ? buildMainVersion(tag, shortHash) : buildDevVersion(shortHash);
+
+  return {
     version,
     branch,
     shortHash,
     fullHash,
-    commitCount,
-    isDev,
+    isDev: !isMain,
     buildTime: new Date().toISOString(),
   };
-
-  mkdirSync(outDir, { recursive: true });
-  writeFileSync(outFile, JSON.stringify(data, null, 2) + "\n", "utf-8");
-
-  console.log(`✓ ${version} (${branch}, ${commitCount} commits)`);
 }
 
-main().catch((err) => {
-  console.error("generate-version error:", err.message);
-  const fallback = {
-    version: `dev-1-${shortHash}`,
-    branch,
-    shortHash,
-    fullHash,
-    commitCount: 1,
+function writeVersionFile(data) {
+  mkdirSync(OUTPUT_DIR, { recursive: true });
+  writeFileSync(OUTPUT_FILE, JSON.stringify(data, null, 2) + "\n", "utf-8");
+}
+
+function fallbackData() {
+  return {
+    version: `dev-unknown`,
+    branch: readBranch(),
+    shortHash: readCommitHash().slice(0, 7) || "unknown",
+    fullHash: readCommitHash(),
     isDev: true,
     buildTime: new Date().toISOString(),
   };
-  mkdirSync(outDir, { recursive: true });
-  writeFileSync(outFile, JSON.stringify(fallback, null, 2) + "\n", "utf-8");
-  process.exit(0);
-});
+}
+
+// ---------- entry ----------
+
+main()
+  .then((data) => {
+    writeVersionFile(data);
+    console.log(`✓ ${data.version} (${data.branch})`);
+  })
+  .catch((err) => {
+    console.error("generate-version failed:", err.message);
+    writeVersionFile(fallbackData());
+    process.exit(0); // 不阻塞构建
+  });
+
+async function main() {
+  return generate();
+}
