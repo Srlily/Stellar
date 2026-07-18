@@ -15,7 +15,7 @@ function safeExec(cmd) {
   }
 }
 
-// 优先从环境变量读取（CI/CD 注入），回退到 git 命令
+// 从环境变量或 git 获取基本信息
 const branch =
   process.env.CF_PAGES_BRANCH ||
   process.env.GIT_BRANCH ||
@@ -23,51 +23,101 @@ const branch =
   safeExec("git rev-parse --abbrev-ref HEAD") ||
   "unknown";
 
-// CF Pages / Vercel / Netlify 通用环境变量
-const shortHash =
-  process.env.CF_PAGES_COMMIT_SHA?.slice(0, 7) ||
-  process.env.COMMIT_REF?.slice(0, 7) ||
-  process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ||
-  process.env.GITHUB_SHA?.slice(0, 7) ||
-  safeExec("git rev-parse --short HEAD") ||
-  "unknown";
+const fullHash =
+  process.env.CF_PAGES_COMMIT_SHA ||
+  process.env.GITHUB_SHA ||
+  process.env.VERCEL_GIT_COMMIT_SHA ||
+  safeExec("git rev-parse HEAD") ||
+  "";
 
-// commit 数：在浅克隆下可能不准，做个保底
-let commitCount =
-  parseInt(safeExec("git rev-list --count HEAD") || "0", 10);
+const shortHash = fullHash.slice(0, 7) || "unknown";
 
-if (!commitCount || commitCount < 1) {
-  // 尝试用环境变量或默认值
-  commitCount = parseInt(process.env.COMMIT_COUNT || "0", 10) || 1;
+// 从 GitHub API 获取分支的 commit 数
+async function getCommitCount(owner, repo, branch) {
+  const headers = { "User-Agent": "stellar-build", Accept: "application/vnd.github+json" };
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  }
+
+  const url = `https://api.github.com/repos/${owner}/${repo}/commits?per_page=1&sha=${branch}`;
+  const res = await fetch(url, { headers });
+  if (!res.ok) return null;
+
+  const linkHeader = res.headers.get("Link");
+  if (!linkHeader) return 1; // 没有分页 = 只有 1 个 commit
+
+  // Link: <...?page=N>; rel="last"
+  const match = linkHeader.match(/[?&]page=(\d+)>;\s*rel="last"/);
+  return match ? parseInt(match[1], 10) : 1;
 }
 
-const commitTime =
-  process.env.CF_PAGES_COMMIT_SHORT_SHA || // CF Pages 没时间
-  safeExec("git log -1 --format=%cd --date=short");
+// 从 GitHub API 获取最近 tag
+async function getLatestTag(owner, repo) {
+  const headers = { "User-Agent": "stellar-build", Accept: "application/vnd.github+json" };
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  }
 
-let version;
-let isDev;
-
-if (branch === "main" || branch === "master") {
-  isDev = false;
-  const tag = safeExec("git describe --tags --abbrev=0");
-  version = tag || `1.0.0-${commitCount}-g${shortHash}`;
-} else {
-  isDev = true;
-  version = `dev-${commitCount}-${shortHash}`;
+  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/tags?per_page=1`, { headers });
+  if (!res.ok) return null;
+  const tags = await res.json();
+  return tags[0]?.name || null;
 }
 
-const data = {
-  version,
-  branch,
-  shortHash,
-  commitCount,
-  commitTime,
-  isDev,
-  buildTime: new Date().toISOString(),
-};
+// 解析远程仓库
+const remote = safeExec("git config --get remote.origin.url");
+const match = remote.match(/github\.com[:/](.+?)\/(.+?)(?:\.git)?$/);
 
-mkdirSync(outDir, { recursive: true });
-writeFileSync(outFile, JSON.stringify(data, null, 2) + "\n", "utf-8");
+async function main() {
+  let commitCount = 1;
+  let tag = null;
 
-console.log(`✓ Generated ${outFile}: ${version} (${branch})`);
+  if (match) {
+    const [, owner, repo] = match;
+    commitCount = (await getCommitCount(owner, repo, branch)) || 1;
+    if (branch === "main" || branch === "master") {
+      tag = await getLatestTag(owner, repo);
+    }
+  }
+
+  let version;
+  let isDev;
+  if (branch === "main" || branch === "master") {
+    isDev = false;
+    version = tag || `1.0.0-${commitCount}-g${shortHash}`;
+  } else {
+    isDev = true;
+    version = `dev-${commitCount}-${shortHash}`;
+  }
+
+  const data = {
+    version,
+    branch,
+    shortHash,
+    fullHash,
+    commitCount,
+    isDev,
+    buildTime: new Date().toISOString(),
+  };
+
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(outFile, JSON.stringify(data, null, 2) + "\n", "utf-8");
+
+  console.log(`✓ ${version} (${branch}, ${commitCount} commits)`);
+}
+
+main().catch((err) => {
+  console.error("generate-version error:", err.message);
+  const fallback = {
+    version: `dev-1-${shortHash}`,
+    branch,
+    shortHash,
+    fullHash,
+    commitCount: 1,
+    isDev: true,
+    buildTime: new Date().toISOString(),
+  };
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(outFile, JSON.stringify(fallback, null, 2) + "\n", "utf-8");
+  process.exit(0);
+});
