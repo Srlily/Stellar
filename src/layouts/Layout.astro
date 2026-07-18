@@ -22,7 +22,7 @@ const defaultTheme: string = (siteConfig.theme as string) || SYSTEM_MODE;
 // 液态玻璃视觉是否启用（与 light/dark 叠加，不再作为独立模式）
 const glassEnabled = siteConfig.glassTheme?.enable ?? false;
 
-// 序列化玻璃参数供客户端运行时使用（解决 SVG 滤镜需要 React DOM 的问题，改为 CSS 变量驱动）
+// 序列化玻璃参数供客户端运行时使用（玻璃视觉完全由 CSS 变量驱动，无需 React）
 const glassParams = glassEnabled
 	? {
 			refractionMode: siteConfig.glassTheme?.refractionMode ?? "standard",
@@ -80,7 +80,8 @@ const align = backgroundConfig.align ?? "center";
 					root.setProperty('--glass-displacement', String(params.displacementScale));
 					root.setProperty('--glass-blur-amount', String(params.blurAmount));
 					root.setProperty('--glass-saturation', String(params.saturation));
-					root.setProperty('--glass-aberration', String(params.aberrationIntensity));
+					// 写入基础值，dark 模式下由 CSS 自行 calc 为 0.6x（替代原 React 的 useAdaptiveAberration）
+					root.setProperty('--glass-aberration-base', String(params.aberrationIntensity));
 					root.setProperty('--glass-radius', params.cornerRadius + 'px');
 				}
 

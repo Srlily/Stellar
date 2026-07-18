@@ -83,7 +83,6 @@ const typewriter = homeConfig.typewriter || { enable: false };
 					const contentType = response.headers.get("content-type") || "";
 
 					let text = "";
-					let creator = "";
 					let from = "";
 
 					if (contentType.includes("javascript") || hitokotoUrl.includes(".js")) {
@@ -95,7 +94,6 @@ const typewriter = homeConfig.typewriter || { enable: false };
 					} else {
 						const data = await response.json();
 						text = data.hitokoto || data.text || data.content || data.quote || data.sentence || "";
-						creator = data.creator || "";
 						from = data.from || data.from_who || "";
 					}
 

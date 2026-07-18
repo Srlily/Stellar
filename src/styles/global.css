@@ -365,8 +365,9 @@ html::-webkit-scrollbar {
 	--glass-blur-amount: 0.0625;
 	/* 饱和度，100-300 */
 	--glass-saturation: 140;
-	/* 色散强度，0-20 */
-	--glass-aberration: 2;
+	/* 色散强度（原始值），0-20，dark 模式会基于它降到 0.6 倍 */
+	--glass-aberration-base: 2;
+	--glass-aberration: var(--glass-aberration-base);
 	/* 卡片圆角，0-999 */
 	--glass-radius: 24px;
 
@@ -395,6 +396,11 @@ html.dark {
 	--glass-tile-bg: rgba(255, 255, 255, 0.12);
 	--glass-tile-border: rgba(148, 163, 184, 0.35);
 	--glass-tile-text: rgb(241, 245, 249);
+	/* 暗色下自动降低色散强度（原 useAdaptiveAberration 行为迁移），
+	   避免亮色边缘在暗背景上过于刺眼。
+	   注意：CSS 不允许变量自引用，这里覆盖在 :root 设置的 --glass-aberration-base，
+	   下游实际消费 --glass-aberration（calc 后的最终值）。 */
+	--glass-aberration: calc(var(--glass-aberration-base) * 0.6);
 }
 
 /* ========== 玻璃启用时的页面底色（透明，露出背景图） ========== */
@@ -458,8 +464,8 @@ html.glass-theme *::after {
 	border: 1px solid var(--glass-tile-border);
 	border-radius: 12px;
 	color: var(--glass-tile-text);
-	-webkit-backdrop-filter: blur(8px) saturate(var(--glass-saturation)%);
-	backdrop-filter: blur(8px) saturate(var(--glass-saturation)%);
+	-webkit-backdrop-filter: blur(8px) saturate(calc(var(--glass-saturation) * 1%));
+	backdrop-filter: blur(8px) saturate(calc(var(--glass-saturation) * 1%));
 }
 
 html.dark .glass-tile {

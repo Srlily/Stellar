@@ -263,46 +263,52 @@ const projectGridClass = getProjectGridClass(projectColumns);
 		<script>
 			(function() {
 				function initTab() {
-					const skillTab = document.querySelector('.skill-tab');
-					const projectTab = document.querySelector('.project-tab');
-					const tabIndicator = document.getElementById('tab-indicator');
-					const skillContent = document.getElementById('skill-content');
-					const projectContent = document.getElementById('project-content');
+					const skillTabRaw = document.querySelector('.skill-tab');
+					const projectTabRaw = document.querySelector('.project-tab');
+					const tabIndicatorRaw = document.getElementById('tab-indicator');
+					const skillContentRaw = document.getElementById('skill-content');
+					const projectContentRaw = document.getElementById('project-content');
 
-					if (!skillTab || !projectTab || !tabIndicator || !skillContent || !projectContent) return;
+					if (!skillTabRaw || !projectTabRaw || !tabIndicatorRaw || !skillContentRaw || !projectContentRaw) return;
 
-				function switchTab(tab) {
-					const isDark = document.documentElement.classList.contains('dark');
-					const activeColor = isDark ? 'rgb(226, 232, 240)' : 'rgb(15, 23, 42)';
-					const inactiveColor = isDark ? 'rgb(148, 163, 184)' : 'rgb(100, 116, 139)';
+					const skillTab = skillTabRaw as HTMLElement;
+					const projectTab = projectTabRaw as HTMLElement;
+					const tabIndicator = tabIndicatorRaw as HTMLElement;
+					const skillContent = skillContentRaw as HTMLElement;
+					const projectContent = projectContentRaw as HTMLElement;
 
-					if (tab === 'skill') {
-						tabIndicator.style.left = '4px';
-						skillTab.style.color = activeColor;
-						skillTab.querySelector('svg').style.color = activeColor;
-						projectTab.style.color = inactiveColor;
-						projectTab.querySelector('svg').style.color = inactiveColor;
-						projectContent.classList.add('hidden');
-						skillContent.classList.remove('hidden');
-					} else {
-						tabIndicator.style.left = 'calc(50%)';
-						projectTab.style.color = activeColor;
-						projectTab.querySelector('svg').style.color = activeColor;
-						skillTab.style.color = inactiveColor;
-						skillTab.querySelector('svg').style.color = inactiveColor;
-						skillContent.classList.add('hidden');
-						projectContent.classList.remove('hidden');
-						// 切换到项目选项卡时触发GSAP滚动动画和标签溢出检测
-						requestAnimationFrame(function() {
-							// 触发标签溢出检测
-							document.dispatchEvent(new CustomEvent('check-tag-overflow'));
-						});
+					function switchTab(tab: string) {
+						const isDark = document.documentElement.classList.contains('dark');
+						const activeColor = isDark ? 'rgb(226, 232, 240)' : 'rgb(15, 23, 42)';
+						const inactiveColor = isDark ? 'rgb(148, 163, 184)' : 'rgb(100, 116, 139)';
+
+						if (tab === 'skill') {
+							tabIndicator.style.left = '4px';
+							skillTab.style.color = activeColor;
+							skillTab.querySelector('svg')!.style.color = activeColor;
+							projectTab.style.color = inactiveColor;
+							projectTab.querySelector('svg')!.style.color = inactiveColor;
+							projectContent.classList.add('hidden');
+							skillContent.classList.remove('hidden');
+						} else {
+							tabIndicator.style.left = 'calc(50%)';
+							projectTab.style.color = activeColor;
+							projectTab.querySelector('svg')!.style.color = activeColor;
+							skillTab.style.color = inactiveColor;
+							skillTab.querySelector('svg')!.style.color = inactiveColor;
+							skillContent.classList.add('hidden');
+							projectContent.classList.remove('hidden');
+							// 切换到项目选项卡时触发GSAP滚动动画和标签溢出检测
+							requestAnimationFrame(function() {
+								// 触发标签溢出检测
+								document.dispatchEvent(new CustomEvent('check-tag-overflow'));
+							});
+						}
 					}
-				}
 
-				skillContent.style.transition = 'opacity 0.15s ease';
-				projectContent.style.transition = 'opacity 0.15s ease';
-				switchTab('skill');
+					skillContent.style.transition = 'opacity 0.15s ease';
+					projectContent.style.transition = 'opacity 0.15s ease';
+					switchTab('skill');
 
 				skillTab.addEventListener('click', () => switchTab('skill'));
 				projectTab.addEventListener('click', () => switchTab('project'));
@@ -509,7 +515,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 				</button>
 			</div>
 			<div class="modal-grid">
-				{modalProjects.map((project, index) => (
+				{modalProjects.map((project) => (
 					<a
 						href={project.url}
 						target={project.url.startsWith("/") ? "_self" : "_blank"}
