@@ -1,33 +1,29 @@
 ---
-import { execSync } from "node:child_process";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+
 const year = new Date().getFullYear();
 
-function getVersion() {
-	try {
-		// 获取当前分支
-		const branch = execSync("git rev-parse --abbrev-ref HEAD", { encoding: "utf-8" }).trim();
-		const commitCount = execSync("git rev-list --count HEAD", { encoding: "utf-8" }).trim();
-		const shortHash = execSync("git rev-parse --short HEAD", { encoding: "utf-8" }).trim();
-		const commitTime = execSync("git log -1 --format=%cd --date=short", { encoding: "utf-8" }).trim();
+// 尝试读取构建时生成的 version.json
+// 文件在 .gitignore 中，首次 clone 后需执行 `pnpm build` 或 `node scripts/generate-version.js` 生成
+const versionPath = join(process.cwd(), "src", "generated", "version.json");
+let info = {
+	version: "unknown",
+	branch: "unknown",
+	shortHash: "unknown",
+	commitCount: 0,
+	commitTime: "",
+	isDev: true,
+};
 
-		if (branch === "main") {
-			// 正式版：优先使用最近的 tag，没有则回退到 commit 数 + hash
-			try {
-				const tag = execSync("git describe --tags --abbrev=0", { encoding: "utf-8" }).trim();
-				return { version: tag, branch, commitTime, shortHash, isDev: false };
-			} catch {
-				return { version: `1.0.0-${commitCount}-g${shortHash}`, branch, commitTime, shortHash, isDev: false };
-			}
-		}
-
-		// dev 分支：dev-{commit数}-{短hash}
-		return { version: `dev-${commitCount}-${shortHash}`, branch, commitTime, shortHash, isDev: true };
-	} catch {
-		return { version: "dev", branch: "unknown", commitTime: "", shortHash: "", isDev: true };
+try {
+	if (existsSync(versionPath)) {
+		const raw = readFileSync(versionPath, "utf-8");
+		info = JSON.parse(raw);
 	}
+} catch {
+	// 保持默认值
 }
-
-const info = getVersion();
 ---
 
 <footer class="mx-auto w-full max-w-5xl px-6 py-6 text-center text-sm text-slate-500 animate-on-scroll anim-fade-up">

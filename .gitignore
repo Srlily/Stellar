@@ -74,3 +74,8 @@ pull.log
 before.log
 after.log
 astro_check.log
+
+# =========================
+# 构建时生成的版本信息
+# =========================
+src/generated/
