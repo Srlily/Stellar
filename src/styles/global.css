@@ -57,11 +57,21 @@ html.is-animating .transition-fade {
 	display: none !important;
 }
 
-/* 非玻璃模式：深色半透明 + 模糊背景内容 */
+/* 非玻璃模式：深色半透明 + 模糊背景内容
+ *
+ * 重要：backdrop-filter 拆成独立选择器写。
+ * 原因：Tailwind v4 内置的 Lightning CSS 优化器会把同一规则块里
+ *       无前缀与 -webkit- 前缀完全相同的声明去重，导致生产构建里
+ *       只剩 -webkit-backdrop-filter。现代 Chromium 只识别无前缀
+ *       的 backdrop-filter，渲染计算值为 none → 弹窗虚化丢失。
+ *       拆成两个独立规则后，Lightning CSS 无法判定两条等价，必须
+ *       同时保留两条前缀版本。 */
 .modal-backdrop {
 	background: rgba(0, 0, 0, 0.55);
-	backdrop-filter: blur(8px) saturate(120%);
+}
+.modal-backdrop {
 	-webkit-backdrop-filter: blur(8px) saturate(120%);
+	backdrop-filter: blur(8px) saturate(120%);
 }
 html.glass-theme .modal-backdrop {
 	background: radial-gradient(
@@ -69,8 +79,10 @@ html.glass-theme .modal-backdrop {
 		rgba(15, 23, 42, 0.55) 0%,
 		rgba(15, 23, 42, 0.75) 100%
 	);
-	backdrop-filter: blur(24px) saturate(180%);
+}
+html.glass-theme .modal-backdrop {
 	-webkit-backdrop-filter: blur(24px) saturate(180%);
+	backdrop-filter: blur(24px) saturate(180%);
 }
 html.glass-theme:not(.dark) .modal-backdrop {
 	background: radial-gradient(
@@ -121,13 +133,12 @@ html.dark .modal-content {
 		0 0 100px -20px rgba(99, 102, 241, 0.2);
 }
 
-/* 玻璃模式：弹窗主体使用强玻璃 */
+/* 玻璃模式：弹窗主体使用强玻璃
+ * 重要：同上，backdrop-filter 必须与 -webkit- 分开写以防 Lightning CSS 去重。 */
 html.glass-theme .modal-content {
 	background: rgba(255, 255, 255, 0.12);
 	border: 1px solid rgba(255, 255, 255, 0.35);
 	color: var(--glass-card-text);
-	backdrop-filter: blur(28px) saturate(180%);
-	-webkit-backdrop-filter: blur(28px) saturate(180%);
 	box-shadow:
 		/* 外层柔和阴影 */
 		0 25px 50px -12px rgba(15, 23, 42, 0.25),
@@ -136,6 +147,10 @@ html.glass-theme .modal-content {
 		inset 0 1px 0 0 rgba(255, 255, 255, 0.4),
 		/* 底部反光 */
 		inset 0 -1px 0 0 rgba(255, 255, 255, 0.1);
+}
+html.glass-theme .modal-content {
+	-webkit-backdrop-filter: blur(28px) saturate(180%);
+	backdrop-filter: blur(28px) saturate(180%);
 }
 html.glass-theme.dark .modal-content {
 	background: rgba(15, 23, 42, 0.4);
