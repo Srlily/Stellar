@@ -303,6 +303,18 @@ export type SiteConfig = {
 	// 主页布局：vertical（垂直排列）| horizontal（水平排列）
 	homeLayout?: "vertical" | "horizontal";
 
+	// 网站备案信息
+	filing?: {
+		icp?: {
+			number: string; // ICP 备案号
+			url?: string; // 备案查询链接
+		};
+		publicSecurity?: {
+			number: string; // 网安备案号
+			url?: string; // 备案查询链接
+		};
+	};
+
 	// 统计分析
 	analytics?: {
 		googleAnalyticsId?: string; // Google Analytics ID

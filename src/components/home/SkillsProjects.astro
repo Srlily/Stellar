@@ -74,18 +74,19 @@ const showTabs = skillEnabled && projectEnabled && validSkills.length > 0 && val
 const onlySkills = skillEnabled && validSkills.length > 0 && (!projectEnabled || validProjects.length === 0);
 const onlyProjects = projectEnabled && validProjects.length > 0 && (!skillEnabled || validSkills.length === 0);
 
-// 根据 columns 生成 Tailwind 类名
-function getProjectGridClass(cols: number): string {
+// 根据 columns 生成统一的响应式栅格类名，保证技能和项目卡片在各端布局一致
+function getGridClass(cols: number): string {
 	const gridClasses: Record<number, string> = {
-		2: "grid-cols-2",
-		3: "grid-cols-3",
-		4: "grid-cols-4",
-		5: "grid-cols-5",
-		6: "grid-cols-6",
+		2: "grid-cols-1 md:grid-cols-2 lg:grid-cols-2",
+		3: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+		4: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
+		5: "grid-cols-1 md:grid-cols-2 lg:grid-cols-5",
+		6: "grid-cols-1 md:grid-cols-2 lg:grid-cols-6",
 	};
-	return gridClasses[cols] || "grid-cols-4";
+	return gridClasses[cols] || gridClasses[4];
 }
-const projectGridClass = getProjectGridClass(projectColumns);
+const skillGridClass = getGridClass(skillColumns);
+const projectGridClass = getGridClass(projectColumns);
 ---
 
 {showTabs && (
@@ -129,32 +130,34 @@ const projectGridClass = getProjectGridClass(projectColumns);
 			</button>
 		</div>
 
-		{/* 技能内容 */}
-		<div id="skill-content" class="tab-content min-h-[200px]">
-			<ul class={`relative grid gap-x-6 gap-y-3 ${skillColumns >= 4 ? 'md:grid-cols-2 lg:grid-cols-4' : skillColumns >= 3 ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}>
-				{validSkills.map((skill, index) => (
-					<li class:list={["skill-item flex flex-col gap-1.5 rounded-lg px-2 py-1.5 -mx-2 -my-1.5 transition-all duration-300 hover:scale-105 hover:bg-slate-50 dark:hover:bg-slate-700/30 cursor-default animate-on-scroll anim-progress", `stagger-${Math.min(index + 1, 8)}`]}>
-						<div class="flex justify-between">
-							<label class="text-xs font-medium text-slate-700 dark:text-slate-300">
-								{skill.name}
-							</label>
-							<span class="text-xs font-medium text-slate-500 dark:text-slate-400">
-								{skill.level || 0}%
-							</span>
-						</div>
-						<div class="relative h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-600">
-							<div
-								class="progress-bar-fill absolute h-full rounded-full"
-								style={`${progressStyle} width: ${skill.level || 0}%;`}
-							></div>
-						</div>
-					</li>
-				))}
-			</ul>
-		</div>
+		<div class="tab-panels">
+			{/* 技能内容 */}
+			<div id="skill-content" class="tab-content min-h-[200px]">
+				<ul class={`relative grid gap-x-6 gap-y-3 ${skillGridClass}`}>
+					{validSkills.map((skill, index) => (
+						<li class:list={["skill-item flex flex-col gap-1.5 rounded-lg px-2 py-1.5 -mx-2 -my-1.5 transition-all duration-300 hover:scale-105 hover:bg-slate-50 dark:hover:bg-slate-700/30 cursor-default animate-on-scroll anim-progress", `stagger-${Math.min(index + 1, 8)}`]}>
+							<div class="flex justify-between">
+								<label class="text-xs font-medium text-slate-700 dark:text-slate-300">
+									{skill.name}
+								</label>
+								<span class="text-xs font-medium text-slate-500 dark:text-slate-400">
+									{skill.level || 0}%
+								</span>
+							</div>
+							<div class="relative h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-600">
+								<div
+									class="progress-bar-fill absolute h-full rounded-full"
+									data-width={`${skill.level || 0}%`}
+									style={`${progressStyle} width: ${skill.level || 0}%;`}
+								></div>
+							</div>
+						</li>
+					))}
+				</ul>
+			</div>
 
-		{/* 项目内容 */}
-		<div id="project-content" class="tab-content hidden min-h-[200px]">
+			{/* 项目内容 */}
+			<div id="project-content" class="tab-content hidden min-h-[200px]">
 			<div class={`grid ${projectGridClass} gap-x-6 gap-y-3`}>
 				{visibleProjects.map((project, index) => (
 					<a
@@ -257,6 +260,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 					</button>
 				)}
 			</div>
+			</div>
 		</div>
 
 		{/* 选项卡脚本 */}
@@ -345,7 +349,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 
 		{/* 技能列表 */}
 		<div class="min-h-[200px]">
-			<ul class={`relative grid gap-x-6 gap-y-3 ${skillColumns >= 4 ? 'md:grid-cols-2 lg:grid-cols-4' : skillColumns >= 3 ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'}`}>
+			<ul class={`relative grid gap-x-6 gap-y-3 ${skillGridClass}`}>
 				{validSkills.map((skill, index) => (
 					<li class:list={["skill-item flex flex-col gap-1.5 rounded-lg px-2 py-1.5 -mx-2 -my-1.5 transition-all duration-300 hover:scale-105 hover:bg-slate-50 dark:hover:bg-slate-700/30 cursor-default animate-on-scroll anim-progress", `stagger-${Math.min(index + 1, 8)}`]}>
 						<div class="flex justify-between">
@@ -359,6 +363,7 @@ const projectGridClass = getProjectGridClass(projectColumns);
 						<div class="relative h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-600">
 							<div
 								class="progress-bar-fill absolute h-full rounded-full"
+								data-width={`${skill.level || 0}%`}
 								style={`${progressStyle} width: ${skill.level || 0}%;`}
 							></div>
 						</div>
@@ -744,3 +749,20 @@ const projectGridClass = getProjectGridClass(projectColumns);
 		});
 	})();
 </script>
+
+<style>
+	/* 两个选项卡共用同一网格层，由内容较高的面板统一撑开区域。 */
+	.tab-panels {
+		display: grid;
+	}
+
+	.tab-panels > .tab-content {
+		grid-area: 1 / 1;
+	}
+
+	.tab-panels > .tab-content.hidden {
+		display: block;
+		visibility: hidden;
+		pointer-events: none;
+	}
+</style>

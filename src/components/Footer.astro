@@ -1,8 +1,12 @@
 ---
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { siteConfig } from "@/config/siteConfig";
 
 const year = new Date().getFullYear();
+const filing = siteConfig.filing;
+const icp = filing?.icp?.number?.trim();
+const publicSecurity = filing?.publicSecurity?.number?.trim();
 
 // 尝试读取构建时生成的 version.json
 // 文件在 .gitignore 中，首次 clone 后需执行 `pnpm build` 或 `node scripts/generate-version.js` 生成
@@ -26,6 +30,30 @@ try {
 
 <footer class="mx-auto w-full max-w-5xl px-6 py-6 text-center text-sm text-slate-500 animate-on-scroll anim-fade-up">
 	<p>© {year} Stellar. All rights reserved.</p>
+	{(icp || publicSecurity) && (
+		<div class="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-slate-400">
+			{icp && (
+				<a
+					href={filing?.icp?.url || "https://beian.miit.gov.cn/"}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="transition-colors hover:text-primary-500"
+				>
+					ICP备案号：{icp}
+				</a>
+			)}
+			{publicSecurity && (
+				<a
+					href={filing?.publicSecurity?.url || "https://beian.mps.gov.cn/"}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="transition-colors hover:text-primary-500"
+				>
+					网安备案号：{publicSecurity}
+				</a>
+			)}
+		</div>
+	)}
 	<p class="mt-1 text-xs text-slate-400 inline-flex items-center justify-center gap-1.5">
 		{info.isDev && <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>}
 		<code>{info.version}</code>

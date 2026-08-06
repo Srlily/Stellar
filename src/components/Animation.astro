@@ -388,25 +388,6 @@
     }
 
     /**
-     * 关键改进：循环瞬移后立即禁用 scroll-snap 一帧，防止 snap 反弹导致视觉抽搐
-     * (snap 算法在瞬移后可能重新检测并 snap 到错误位置)
-     */
-    let snapDisabled = false;
-    function disableSnapForOneFrame() {
-      if (snapDisabled) return;
-      snapDisabled = true;
-      const html = document.documentElement;
-      const original = html.style.scrollSnapType;
-      html.style.scrollSnapType = "none";
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          html.style.scrollSnapType = original;
-          snapDisabled = false;
-        });
-      });
-    }
-
-    /**
      * 向下溢出：从 page-2 底部 → page-1 顶部
      * 视觉：page-2 从底部滑出视野（opacity 0, y -60），page-1 从下方淡入
      */
@@ -416,34 +397,35 @@
 
       // 关键：循环动画期间禁用 ScrollTrigger + scroll-snap，避免与跳转动画冲突
       pageTriggers.forEach((t) => t.disable());
-      disableSnapForOneFrame();
+      const html = document.documentElement;
+      const originalSnapType = html.style.scrollSnapType;
+      html.style.scrollSnapType = "none";
 
-      // page-2 向上滑出
-      gsap.to(page2Content, {
-        y: -60,
-        opacity: 0,
-        duration: LOOP_DURATION,
-        ease: "power2.in",
-        overwrite: true,
-      });
-      // page-1 从下方出现
-      gsap.fromTo(
-        page1Content,
-        { y: 80, opacity: 0 },
-        { y: 0, opacity: 1, duration: LOOP_DURATION, ease: "power2.out", overwrite: true }
-      );
-
-      // 立即瞬移到顶部（使用 scrollTo 避免 hash 改变）
-      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-
-      setTimeout(() => {
-        isLooping = false;
-        // 清理动画 inline style（让 ScrollTrigger 重新接管）
-        gsap.set([page1Content, page2Content], { clearProps: "transform,opacity" });
-        // 重新启用 ScrollTrigger 并刷新（基于当前 scrollY 重新计算 progress）
-        pageTriggers.forEach((t) => t.enable());
-        ScrollTrigger.refresh();
-      }, LOOP_DURATION * 1000);
+      // 先让当前页离场，再切换滚动位置，最后让目标页入场，避免瞬移时突然闪现。
+      gsap.timeline({
+        onComplete: () => {
+          html.style.scrollSnapType = originalSnapType;
+          isLooping = false;
+          gsap.set([page1Content, page2Content], { clearProps: "transform,opacity" });
+          pageTriggers.forEach((t) => t.enable());
+          ScrollTrigger.refresh();
+        },
+      })
+        .to(page2Content, {
+          y: -60,
+          opacity: 0,
+          duration: LOOP_DURATION * 0.55,
+          ease: "power2.in",
+          overwrite: true,
+        })
+        .add(() => {
+          window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+        })
+        .fromTo(
+          page1Content,
+          { y: 80, opacity: 0 },
+          { y: 0, opacity: 1, duration: LOOP_DURATION * 0.8, ease: "power2.out", overwrite: true }
+        );
     }
 
     /**
@@ -453,43 +435,46 @@
       if (isLooping) return;
       isLooping = true;
 
-      // 关键：循环动画期间禁用 ScrollTrigger + scroll-snap
       pageTriggers.forEach((t) => t.disable());
-      disableSnapForOneFrame();
+      const html = document.documentElement;
+      const originalSnapType = html.style.scrollSnapType;
+      html.style.scrollSnapType = "none";
 
-      // page-1 向下滑出
-      gsap.to(page1Content, {
-        y: 80,
-        opacity: 0,
-        duration: LOOP_DURATION,
-        ease: "power2.in",
-        overwrite: true,
-      });
-      // page-2 从上方出现
-      gsap.fromTo(
-        page2Content,
-        { y: -60, opacity: 0 },
-        { y: 0, opacity: 1, duration: LOOP_DURATION, ease: "power2.out", overwrite: true }
-      );
-
-      // 立即瞬移到底部
-      window.scrollTo({
-        top: getMaxScroll(),
-        behavior: "instant" as ScrollBehavior,
-      });
-
-      setTimeout(() => {
-        isLooping = false;
-        gsap.set([page1Content, page2Content], { clearProps: "transform,opacity" });
-        pageTriggers.forEach((t) => t.enable());
-        ScrollTrigger.refresh();
-      }, LOOP_DURATION * 1000);
+      // 与向下循环保持相同的离场 -> 瞬移 -> 入场节奏。
+      gsap.timeline({
+        onComplete: () => {
+          html.style.scrollSnapType = originalSnapType;
+          isLooping = false;
+          gsap.set([page1Content, page2Content], { clearProps: "transform,opacity" });
+          pageTriggers.forEach((t) => t.enable());
+          ScrollTrigger.refresh();
+        },
+      })
+        .to(page1Content, {
+          y: 80,
+          opacity: 0,
+          duration: LOOP_DURATION * 0.55,
+          ease: "power2.in",
+          overwrite: true,
+        })
+        .add(() => {
+          window.scrollTo({
+            top: getMaxScroll(),
+            behavior: "instant" as ScrollBehavior,
+          });
+        })
+        .fromTo(
+          page2Content,
+          { y: -60, opacity: 0 },
+          { y: 0, opacity: 1, duration: LOOP_DURATION * 0.8, ease: "power2.out", overwrite: true }
+        );
     }
 
     // ====== 监听器 ======
 
     // 鼠标滚轮（passive:false 以便 preventDefault 阻止默认行为）
     loopWheelHandler = (e: WheelEvent) => {
+      if (document.body.classList.contains("modal-open")) return;
       if (isLooping) {
         e.preventDefault();
         return;
@@ -518,8 +503,9 @@
       touchStartScrollY = window.scrollY;
       touchConsumed = false;
     };
-    loopTouchMoveHandler = (_e: TouchEvent) => {
-      if (touchConsumed || isLooping) return;
+    loopTouchMoveHandler = (e: TouchEvent) => {
+      // 弹窗打开时，滚动手势属于弹窗，不应驱动主页循环。
+      if (document.body.classList.contains("modal-open") || touchConsumed || isLooping) return;
       const y = window.scrollY;
       const max = getMaxScroll();
 
@@ -528,16 +514,18 @@
         // 已经在顶部且继续向上（touchStartScrollY 接近 0，touchY 增大）
         // 这里用 touchStartY - touchY > 50 作为"持续上拉"的阈值
         // touch 事件中 touchStartY - currentTouchY > 50 表示手指向下拉
-        const currentTouch = _e.touches[0]?.clientY ?? touchStartY;
+        const currentTouch = e.touches[0]?.clientY ?? touchStartY;
         if (touchStartY - currentTouch < -50) {
           touchConsumed = true;
+          e.preventDefault();
           loopToBottom();
         }
       } else if (touchStartScrollY >= max - BOUNDARY_TOLERANCE && y >= max - BOUNDARY_TOLERANCE) {
         // 已经在底部且继续向下（手指向上推）
-        const currentTouch = _e.touches[0]?.clientY ?? touchStartY;
+        const currentTouch = e.touches[0]?.clientY ?? touchStartY;
         if (touchStartY - currentTouch > 50) {
           touchConsumed = true;
+          e.preventDefault();
           loopToTop();
         }
       }
@@ -546,11 +534,13 @@
       touchConsumed = false;
     };
     document.addEventListener("touchstart", loopTouchStartHandler, { passive: true });
-    document.addEventListener("touchmove", loopTouchMoveHandler, { passive: true });
+    // 触发循环时必须取消当前手势的原生滚动，否则瞬移会和惯性滚动叠加。
+    document.addEventListener("touchmove", loopTouchMoveHandler, { passive: false });
     document.addEventListener("touchend", loopTouchEndHandler, { passive: true });
 
     // 键盘：PageUp / PageDown / Home / End / Arrow
     loopKeyHandler = (e: KeyboardEvent) => {
+      if (document.body.classList.contains("modal-open")) return;
       if (isLooping) return;
       // 排除输入框
       const target = e.target as HTMLElement;

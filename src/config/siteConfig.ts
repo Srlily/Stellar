@@ -29,6 +29,18 @@ export const siteConfig: SiteConfig = {
 	// 由 src/pages/index.astro 读取并切换到对应的页面文件
 	homeLayout: "vertical",
 
+	// 网站备案信息（备案号留空时，页脚不会显示对应项目）
+	filing: {
+		icp: {
+			number: "",
+			url: "https://beian.miit.gov.cn/",
+		},
+		publicSecurity: {
+			number: "",
+			url: "https://beian.mps.gov.cn/",
+		},
+	},
+
 	// 主题模式
 	// 选项："light" | "dark" | "system"
 	// - light: 始终使用亮色模式

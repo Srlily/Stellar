@@ -332,6 +332,7 @@ html {
 	scrollbar-width: none; /* Firefox */
 	-ms-overflow-style: none; /* IE/Edge */
 	scroll-behavior: smooth;
+	overscroll-behavior-y: none;
 	/* scroll-snap-type 默认启用；运行时可由 JS 动态关闭（循环瞬移时） */
 	scroll-snap-type: y proximity;
 }
