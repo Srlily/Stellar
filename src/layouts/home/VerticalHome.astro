@@ -26,11 +26,20 @@ import Footer from "@/components/Footer.astro";
 		</div>
 	</section>
 
-	{/* 第二页：技能与项目 + Footer */}
+	{/* 第二页：技能点 */}
 	<section class="page page-2">
 		<div class="page-content mx-auto flex w-full max-w-6xl flex-col items-center justify-center gap-12 px-6 py-16">
 			<div class="flex w-full flex-col items-center gap-12">
-				<SkillsProjects />
+				<SkillsProjects section="skills" />
+			</div>
+		</div>
+	</section>
+
+	{/* 第三页：项目 + Footer */}
+	<section class="page page-3">
+		<div class="page-content mx-auto flex w-full max-w-6xl flex-col items-center justify-center gap-12 px-6 py-16">
+			<div class="flex w-full flex-col items-center gap-12">
+				<SkillsProjects section="projects" />
 			</div>
 		</div>
 		<Footer />

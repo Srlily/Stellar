@@ -14,9 +14,10 @@ const glassTileClass = glassEnabled ? "glass-tile" : "";
 
 interface Props {
 	class?: string;
+	section?: "both" | "skills" | "projects";
 }
 
-const { class: className = "" } = Astro.props;
+const { class: className = "", section = "both" } = Astro.props;
 
 // 获取技能卡片配置
 const skillCards = homeConfig.skillCards;
@@ -42,6 +43,10 @@ const validSkills = skills.filter((skill) => skill.name && skill.name.trim() !==
 
 // 过滤项目
 const validProjects = projects.filter((project) => project.name && project.name.trim() !== "" && project.url && project.url.trim() !== "");
+
+// 页面模式下只渲染对应内容，保留同一套卡片和配置逻辑。
+const showSkills = section !== "projects" && skillEnabled;
+const showProjects = section !== "skills" && projectEnabled;
 
 // 计算项目分页
 // showMoreButton 为 true 时，预留一个"更多"按钮位置
@@ -70,9 +75,9 @@ const progressStyle = hasGradient
 	: "background-color: #22c55e;";
 
 // 检查是否需要显示选项卡
-const showTabs = skillEnabled && projectEnabled && validSkills.length > 0 && validProjects.length > 0;
-const onlySkills = skillEnabled && validSkills.length > 0 && (!projectEnabled || validProjects.length === 0);
-const onlyProjects = projectEnabled && validProjects.length > 0 && (!skillEnabled || validSkills.length === 0);
+const showTabs = section === "both" && showSkills && showProjects && validSkills.length > 0 && validProjects.length > 0;
+const onlySkills = showSkills && validSkills.length > 0 && (!showProjects || validProjects.length === 0);
+const onlyProjects = showProjects && validProjects.length > 0 && (!showSkills || validSkills.length === 0);
 
 // 根据 columns 生成统一的响应式栅格类名，保证技能和项目卡片在各端布局一致
 function getGridClass(cols: number): string {
@@ -91,7 +96,7 @@ const projectGridClass = getGridClass(projectColumns);
 
 {showTabs && (
 	<section class:list={[
-		"rounded-2xl border p-6 animate-on-scroll anim-fade-up stagger-5",
+		"flex min-h-[28rem] w-full flex-col rounded-2xl border p-6 animate-on-scroll anim-fade-up stagger-5",
 		glassCardClass
 			|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
 		className,
@@ -334,7 +339,7 @@ const projectGridClass = getGridClass(projectColumns);
 
 {onlySkills && (
 	<section class:list={[
-		"rounded-2xl border p-6 animate-on-scroll anim-fade-up stagger-5",
+		"flex min-h-[28rem] w-full flex-col rounded-2xl border p-6 animate-on-scroll anim-fade-up stagger-5",
 		glassCardClass
 			|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
 		className,
@@ -376,7 +381,7 @@ const projectGridClass = getGridClass(projectColumns);
 
 {onlyProjects && (
 	<section class:list={[
-		"rounded-2xl border p-6 animate-on-scroll anim-fade-up stagger-5",
+		"flex min-h-[28rem] w-full flex-col rounded-2xl border p-6 animate-on-scroll anim-fade-up stagger-5",
 		glassCardClass
 			|| "border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/80",
 		className,
@@ -494,7 +499,7 @@ const projectGridClass = getGridClass(projectColumns);
 )}
 
 {/* 项目弹窗 - 与 NavCards 完全相同的结构与脚本 */}
-{projectHasMore && (
+{section !== "skills" && projectHasMore && (
 	<div
 		id="project-modal"
 		class="modal-backdrop"
@@ -591,7 +596,7 @@ const projectGridClass = getGridClass(projectColumns);
 )}
 
 {/* 项目弹窗控制脚本 - 与 NavCards 完全相同的逻辑 */}
-<script>
+{section !== "skills" && <script>
 	(function () {
 		const OPEN_ANIM_DURATION = 300;
 
@@ -748,7 +753,7 @@ const projectGridClass = getGridClass(projectColumns);
 			}
 		});
 	})();
-</script>
+</script>}
 
 <style>
 	/* 两个选项卡共用同一网格层，由内容较高的面板统一撑开区域。 */
